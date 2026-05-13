@@ -28,8 +28,17 @@ inline JS — no external assets).
    self-contained.
 6. **Write to user-specified path** or default to `/tmp/<slug>-<topic>.html`
    where `<topic>` is a kebab-case 2-4 word summary of the source content.
-7. **Report the path back.** No long prose summary; the artifact speaks for
-   itself.
+7. **Auto-open immediately.** Run `open <absolute-path>` via Bash right after
+   the Write. Don't ask permission, don't wait — user wants to see it now.
+8. **Report the path back as `open <path>`** (literal `open ` prefix). Single
+   line, no prose summary — the artifact speaks for itself. The `open ` prefix
+   lets the user copy-paste straight into another terminal session.
+9. **Follow up with `AskUserQuestion`** if the artifact contains decision
+   points, recommendations, or open questions. Mirror the in-artifact options
+   as a 2-4 question structured QA panel so the user can resolve in-chat
+   without retyping. See `~/.claude/rules/ask-structured.md` for schema. Skip
+   only if the artifact is purely informational (status report, explainer,
+   slide deck) with nothing to decide.
 
 ## Archetype selection cheatsheet
 
@@ -39,9 +48,9 @@ inline JS — no external assets).
 | compare 2-N options/approaches | `exploration-code-approaches` or `exploration-visual-designs` |
 | postmortem, timeline of an outage | `incident-timeline` |
 | weekly/sprint update | `weekly-status` |
-| PR review (reviewer voice) | `annotated-pull-request` |
-| PR description (author voice) | `pr-writeup` |
-| explain how a system works | `feature-explainer` or `concept-explainer` |
+| PR review (reviewer voice) | `pr-review` |
+| PR description (author voice) | `pr-description` |
+| explain how a system works | `explainer` (concrete or abstract flavour) |
 | boxes-and-arrows of a process | `annotated-flowchart` or `module-map` |
 | design tokens / swatches | `design-system` |
 | component states/variants sheet | `component-variants` |
