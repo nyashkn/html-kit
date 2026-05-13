@@ -1,0 +1,77 @@
+/* Anthropic-style palette + base typography
+ * Extracted from thariqs/html-effectiveness exemplars (MIT).
+ * Reference only — exemplars are self-contained and inline their own copies.
+ * Use when authoring NEW archetypes so they stay visually coherent.
+ */
+
+:root {
+  /* core */
+  --ivory:  #FAF9F5;   /* page background */
+  --paper:  #FFFFFF;   /* card / surface */
+  --slate:  #141413;   /* primary text, dark accents */
+
+  /* accents */
+  --clay:   #D97757;   /* primary accent, links, italic emphasis */
+  --clay-d: #B85C3E;   /* hover / pressed clay */
+  --oat:    #E3DACC;   /* warm fill, selected swatch */
+  --olive:  #788C5D;   /* secondary accent, success, neutral chip */
+  --sage:   #A8B89A;   /* lighter olive variant (used in some exemplars) */
+  --rose:   #C97B7B;   /* warning / danger accent (used in incident/status) */
+
+  /* greys (warm, low-chroma) */
+  --g100: #F0EEE6;
+  --g200: #E6E3DA;
+  --g300: #D1CFC5;
+  --g500: #87867F;
+  --g700: #3D3D3A;
+
+  /* typography */
+  --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
+  --sans:  system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono:  ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+}
+
+/* base reset / page chrome — copy verbatim into new archetypes */
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--ivory);
+  color: var(--slate);
+  font-family: var(--sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* canonical wrapper */
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 32px 140px; }
+
+/* eyebrow + serif headline pattern */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--g500);
+}
+h1.display {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(38px, 5.4vw, 62px);
+  line-height: 1.06;
+  letter-spacing: -0.018em;
+}
+h1.display em { font-style: italic; color: var(--clay); }
+
+/* ASCII tree pattern (lessons learned: must be <pre>, not <div>) */
+pre.tree {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+  background: var(--g100);
+  border: 1px solid var(--g200);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: var(--g700);
+}
