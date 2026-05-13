@@ -12,6 +12,38 @@ inline JS — no external assets).
 
 ## Workflow
 
+### Step 0 — Decide: render inline or delegate?
+
+Renders produce 500-1500 lines of HTML. Per multi-agent delegation rules,
+keep that volume OUT of the main context when possible.
+
+**Delegate to a Sonnet sub-agent (background)** when:
+- Render will exceed ~300 lines OR has 4+ sections
+- Source content is novel (no prior render of similar shape this session)
+- User isn't waiting on the artifact for the next decision (background-friendly)
+
+**Render inline** when:
+- Trivial: one known archetype, structured data already shaped, <200 lines
+- User is iterating live (v2, v3 of an artifact you just produced) — round-trip too slow
+- The render itself is the answer to a clarifying question
+
+**Delegation pattern:**
+1. Write a render brief to `/tmp/render-brief-<topic>.md` containing:
+   - Source content (or a path to it)
+   - Chosen archetype slug + reason
+   - Output path
+   - Any user constraints (palette overrides, sections to emphasize, voice)
+2. Spawn `general-purpose` sub-agent w/ `model: sonnet`, prompt:
+   > "Read /tmp/render-brief-<topic>.md. Read the html-kit SKILL at
+   > ~/.claude/skills/html-kit/SKILL.md. Follow Steps 2-8 of the workflow.
+   > Report only the absolute output path back."
+3. Run `run_in_background: true` if user signaled "do it in the background"
+   or has parallel work to do. Foreground if user is waiting.
+4. After completion, you (main) run `open <path>` and the follow-up
+   `AskUserQuestion` from Step 9.
+
+### Inline workflow (Steps 1-9)
+
 1. **Read the user request + source content.** Identify what kind of artifact
    they want: a plan? an incident postmortem? a comparison of options? a
    status report? a code review? an explainer? a dashboard?

@@ -41,3 +41,12 @@ adapted to your data.
 - Per-archetype skills (`/html-kit:plan`, `/html-kit:incident`, etc.)
 - CLI extraction for non-Claude consumers
 - spec-kit adapter (auto-render approved specs as `implementation-plan` artifacts)
+
+## Install
+
+```bash
+./install.sh             # symlink into ~/.agents/skills + ~/.claude/skills
+./install.sh --uninstall # remove both symlinks
+```
+
+After install, restart Claude Code to pick up the skill, then invoke `/html-kit`.
