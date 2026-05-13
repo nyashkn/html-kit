@@ -1,6 +1,6 @@
 ---
 name: html-kit
-description: Render structured content (plans, decisions, comparisons, dashboards) as polished single-page HTML artifacts using Anthropic-palette archetypes from html-effectiveness. Use when user wants HTML render of synth/plan/spec/decision doc, asks for a "magazine-style" artifact, or wants to share analysis as a self-contained shareable page.
+description: Render structured content as polished single-page HTML artifacts using Anthropic-palette archetypes (plans, decisions, comparisons, explainers, dashboards, incident timelines, PR writeups, weekly status). Trigger phrases - "render this as html", "make this a shareable artifact", "html artifact", "magazine-style writeup", "single-page report", "render the synth/plan/spec/decision doc as html", "dashboard from this data", "explain this visually". Output is a self-contained .html file inlined CSS/SVG/JS, no external assets, ready to paste into Notion/email/PR or share as a link.
 ---
 
 # html-kit
@@ -12,35 +12,56 @@ inline JS — no external assets).
 
 ## Workflow
 
-### Step 0 — Decide: render inline or delegate?
+### Step 0 — Pick render pattern
 
-Renders produce 500-1500 lines of HTML. Per multi-agent delegation rules,
-keep that volume OUT of the main context when possible.
+Four patterns. Pick by task signature, not reflex. Full rationale (council
+deliberation, anti-patterns, when to revisit) in
+`references/delegation-rationale.md` — read only when an unusual case
+arises.
 
-**Delegate to a Sonnet sub-agent (background)** when:
-- Render will exceed ~300 lines OR has 4+ sections
-- Source content is novel (no prior render of similar shape this session)
-- User isn't waiting on the artifact for the next decision (background-friendly)
+| Pattern | Model | Context handoff | Use when |
+|---|---|---|---|
+| **A. Inline (default)** | Opus (main) | None — main has it | User actively iterating · output <500 lines · no parallel work waiting · taste shaping in-thread |
+| **B. Sonnet sub-agent** | Sonnet | Brief.md (lossy) | Narrow: ALL of (pre-spec'd output, pre-shaped data, one-shot, reference render exists) |
+| **C. Opus sub-agent** | Opus (peer) | Verbose brief w/ full convo excerpt + reference render path | Main has parallel work · context budget tight (>70%) · output >500 lines · taste matters but main blocked |
+| **D. Agent team** | Opus × N | Shared task list + msg-passing | Render is synthesis step in a pipeline already running sub-agents (`/search:deep`, `/council`) · multi-artifact set (3+ related HTML files) |
 
-**Render inline** when:
-- Trivial: one known archetype, structured data already shaped, <200 lines
-- User is iterating live (v2, v3 of an artifact you just produced) — round-trip too slow
-- The render itself is the answer to a clarifying question
+**Hard signals:**
+- Brief longer than the diff from inline render → A.
+- Would need to paste conversation transcript verbatim → A or C (never B).
+- Already running ≥2 sub-agents in this turn → D (don't fresh-delegate).
+- Output >1500 lines OR main near compaction → C minimum, D if pipeline.
 
-**Delegation pattern:**
-1. Write a render brief to `/tmp/render-brief-<topic>.md` containing:
-   - Source content (or a path to it)
-   - Chosen archetype slug + reason
+**Never Haiku** for HTML >300 lines (loses global coherence — callouts drift,
+emphasis flattens). Haiku acceptable only for fully-deterministic <500 line
+templating w/ no taste calls.
+
+**Pipeline integration hooks:**
+- `/search:deep` synthesis → spawn render-teammate w/ access to research-agent
+  outputs (D, not C).
+- `/council` synthesis → render-teammate sees all persona outputs directly via
+  shared task list.
+- Multi-artifact deliveries → 1 main + N render-teammates parallel.
+
+**Delegation skeleton (B/C):**
+1. Brief at `/tmp/render-brief-<topic>.md`:
+   - Source content **verbatim** (summarization kills intent for B/C)
+   - Archetype slug + reason
    - Output path
-   - Any user constraints (palette overrides, sections to emphasize, voice)
-2. Spawn `general-purpose` sub-agent w/ `model: sonnet`, prompt:
+   - Reference render path (the prior aesthetic anchor)
+   - User constraints (palette, voice, sections to emphasize)
+2. Spawn `general-purpose` sub-agent. `model: opus` for C, `model: sonnet` for B:
    > "Read /tmp/render-brief-<topic>.md. Read the html-kit SKILL at
-   > ~/.claude/skills/html-kit/SKILL.md. Follow Steps 2-8 of the workflow.
-   > Report only the absolute output path back."
-3. Run `run_in_background: true` if user signaled "do it in the background"
-   or has parallel work to do. Foreground if user is waiting.
-4. After completion, you (main) run `open <path>` and the follow-up
-   `AskUserQuestion` from Step 9.
+   > ~/.claude/skills/html-kit/SKILL.md. Follow Steps 2-9. Report the
+   > absolute output path. Nothing else."
+3. `run_in_background: true` only if user signaled bg or main has parallel
+   work. Default foreground.
+4. Main runs `open <path>` and Step 9 follow-up.
+
+**Agent team skeleton (D):** see Claude Code agent-teams docs
+(https://code.claude.com/docs/en/agent-teams). Give the render-teammate
+access to upstream sub-agent outputs via shared task list, not a copy-paste
+brief.
 
 ### Inline workflow (Steps 1-9)
 
@@ -123,9 +144,26 @@ flat and dense:
 
 ## Tokens
 
-`tokens/anthropic-palette.css` is reference for the palette + base typography.
-Don't `@import` it — copy the `:root { ... }` block inline at the top of your
-`<style>` tag. This keeps each artifact self-contained.
+Reference palette + base typography lives in the html-kit project repo at
+`tokens/anthropic-palette.css` (path relative to project root —
+`~/Documents/dev_work/personal_productivity/html-kit/tokens/anthropic-palette.css`
+when invoked from elsewhere). Don't `@import` it — copy the `:root { ... }`
+block inline at the top of your `<style>` tag. This keeps each artifact
+self-contained.
+
+## Patterns
+
+`patterns/<slug>.md` are cross-archetype reusable components (CSS + HTML
+fragments). Read the relevant archetype recipe's `## Patterns` section to see
+which apply, then inline the fragment + CSS into your render. Never `@import`
+or external-link.
+
+Current patterns:
+- `patterns/decision-box.md` — closing verdict section w/ ordered list + CTA.
+  Use at the end of any decision-bearing artifact.
+
+To promote a new pattern from a finished render, invoke
+`/html-kit:add-to-patterns` (companion sub-skill).
 
 ## Output discipline
 
