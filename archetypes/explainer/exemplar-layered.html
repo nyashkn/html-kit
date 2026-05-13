@@ -1,0 +1,852 @@
+<!-- source: /tmp/explainer-A-keychain-layer-peel.html (this session, 2026-05-14) | layered-flavour reference -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keychain, peeled — what each layer actually does when twitter-cli unlocks your cookies</title>
+<style>
+  :root {
+    --ivory: #FAF9F5;
+    --slate: #141413;
+    --clay: #D97757;
+    --clay-d: #B85C3E;
+    --oat: #E3DACC;
+    --olive: #788C5D;
+    --olive-d: #4B5C39;
+    --rose: #F3D9CC;
+    --rose-d: #8A3B1E;
+    --sage: #E4E9DC;
+    --gray-150: #F0EEE6;
+    --gray-300: #D1CFC5;
+    --gray-500: #87867F;
+    --gray-700: #3D3D3A;
+    --white: #FFFFFF;
+    --serif: ui-serif, Georgia, 'Times New Roman', serif;
+    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ivory);
+    color: var(--gray-700);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    padding: 56px 32px 120px;
+  }
+  .page { max-width: 1120px; margin: 0 auto; }
+
+  /* layout: main + sticky rail (>=1280px) */
+  @media (min-width: 1280px) {
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 56px;
+      max-width: 1440px;
+      margin: 0 auto;
+      align-items: start;
+    }
+    .layout .page { max-width: none; margin: 0; }
+    aside.rail {
+      position: sticky;
+      top: 32px;
+      font-size: 12.5px;
+      max-height: calc(100vh - 64px);
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    details.rail-accordion { display: none; }
+  }
+  @media (max-width: 1279px) {
+    .layout { display: block; }
+    aside.rail { display: none; }
+    details.rail-accordion { display: block; }
+  }
+
+  /* ---------- Header ---------- */
+  header.page-head { margin-bottom: 24px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--gray-500); margin-bottom: 10px;
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 600; font-size: 30px;
+    color: var(--slate); letter-spacing: -0.005em; line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .tldr {
+    border-top: 2px solid var(--slate);
+    border-bottom: 1px solid var(--gray-300);
+    padding: 14px 0 16px;
+    font-size: 15.5px;
+    color: var(--gray-700);
+  }
+  .tldr b { font-family: var(--serif); color: var(--slate); }
+
+  /* ---------- Typography ---------- */
+  h2 {
+    font-family: var(--serif); font-weight: 600; font-size: 22px;
+    color: var(--slate); margin: 44px 0 6px;
+    scroll-margin-top: 64px;
+  }
+  h2 .lvl {
+    display: inline-block; font-family: var(--mono); font-size: 10.5px;
+    color: var(--olive-d); letter-spacing: 0.1em; text-transform: uppercase;
+    vertical-align: middle; margin-right: 10px;
+    border: 1px solid var(--olive); padding: 1px 6px; border-radius: 3px;
+    font-weight: normal;
+    background: var(--sage);
+  }
+  h3 {
+    font-family: var(--serif); font-weight: 600; font-size: 16px;
+    color: var(--slate); margin: 18px 0 6px;
+  }
+  p { margin-bottom: 10px; max-width: 680px; }
+  a { color: var(--clay-d); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: var(--olive-d); }
+  code {
+    font-family: var(--mono); font-size: 12.5px;
+    color: var(--gray-700);
+    background: var(--gray-150);
+    padding: 1px 5px; border-radius: 3px;
+  }
+  pre {
+    font-family: var(--mono); font-size: 12px; line-height: 1.6;
+    background: var(--gray-150);
+    border-left: 2px solid var(--olive);
+    padding: 12px 14px; margin: 10px 0;
+    overflow-x: auto; white-space: pre;
+    color: var(--gray-700);
+  }
+  pre .cm { color: var(--gray-500); font-style: italic; }
+  pre .hl { color: var(--clay-d); }
+
+  ul { padding-left: 22px; max-width: 680px; }
+  li { margin-bottom: 5px; }
+
+  /* ---------- Layer card ---------- */
+  section.layer {
+    border-top: 1px solid var(--gray-300);
+    padding-top: 18px;
+    margin-top: 36px;
+  }
+  section.layer .purpose {
+    font-family: var(--serif); font-size: 16.5px; font-style: italic;
+    color: var(--gray-500); max-width: 680px; margin: 0 0 14px;
+  }
+  .who {
+    font-family: var(--mono); font-size: 11.5px;
+    color: var(--gray-500);
+    margin: 8px 0 12px; max-width: 680px;
+  }
+  .who b { color: var(--slate); }
+
+  .boundary {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin: 14px 0; max-width: 680px;
+  }
+  .boundary > div {
+    border: 1.5px solid var(--gray-300);
+    padding: 10px 12px;
+    background: var(--white);
+    font-size: 13px;
+    border-radius: 4px;
+  }
+  .boundary .label {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--gray-500); margin-bottom: 5px;
+  }
+  @media (max-width: 600px) { .boundary { grid-template-columns: 1fr; } }
+
+  /* ---------- Callouts ---------- */
+  .verify {
+    border-left: 3px solid var(--olive);
+    background: var(--sage);
+    padding: 10px 14px; margin: 14px 0;
+    font-size: 13.5px; max-width: 680px;
+    color: var(--gray-700);
+    border-radius: 0 4px 4px 0;
+  }
+  .verify .tag {
+    font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--olive-d); margin-right: 8px; font-weight: 600;
+  }
+  .trust {
+    border-left: 3px solid var(--clay-d);
+    background: var(--oat);
+    padding: 10px 14px; margin: 14px 0;
+    font-size: 13.5px; max-width: 680px;
+    color: var(--gray-700);
+    border-radius: 0 4px 4px 0;
+  }
+  .trust .tag {
+    font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--clay-d); margin-right: 8px; font-weight: 600;
+  }
+  blockquote.misconception {
+    border-left: 3px solid var(--rose-d);
+    background: var(--rose);
+    padding: 12px 14px 12px 16px; margin: 18px 0;
+    font-size: 14px; max-width: 680px;
+    color: var(--rose-d);
+    border-radius: 0 4px 4px 0;
+  }
+  blockquote.misconception .tag {
+    font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--rose-d); display: block; margin-bottom: 6px; font-weight: 600;
+  }
+  blockquote.misconception b { font-family: var(--serif); color: var(--rose-d); }
+
+  /* ---------- Diagram ---------- */
+  figure.stack {
+    margin: 28px 0; max-width: 680px;
+  }
+  figure.stack svg {
+    width: 100%; height: auto; display: block;
+    background: var(--white);
+    border: 1.5px solid var(--gray-300);
+    border-radius: 4px;
+  }
+  figure.stack figcaption {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--gray-500); margin-top: 8px;
+    letter-spacing: 0.04em;
+  }
+  .stack g.layer-arc { cursor: pointer; }
+  .stack g.layer-arc:hover rect { fill: var(--gray-150); }
+  .stack g.layer-arc:hover text.lname { fill: var(--olive-d); }
+
+  /* ---------- Tables ---------- */
+  table {
+    width: 100%; max-width: 680px;
+    border-collapse: collapse;
+    font-size: 13px; margin: 14px 0;
+    background: var(--white);
+    border: 1.5px solid var(--gray-300);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid var(--gray-300);
+    vertical-align: top;
+  }
+  th {
+    font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--gray-500); font-weight: 600;
+    border-bottom: 2px solid var(--slate);
+    background: var(--gray-150);
+  }
+  td code { font-size: 11.5px; }
+
+  /* ---------- Rail: tab bar ---------- */
+  .rail-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .rail-tabs button {
+    flex: 1;
+    border: 1px solid var(--gray-300);
+    background: transparent;
+    color: var(--gray-500);
+    padding: 5px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: background 100ms, color 100ms, border-color 100ms;
+  }
+  .rail-tabs button:hover { color: var(--slate); background: var(--gray-150); }
+  .rail-tabs button.active {
+    background: var(--slate);
+    color: var(--ivory);
+    border-color: var(--slate);
+  }
+
+  /* ---------- Rail panels (shared with accordion) ---------- */
+  .rail-panel { display: none; }
+  [data-active-tab="toc"] .rail-panel.toc { display: block; }
+  [data-active-tab="glossary"] .rail-panel.glossary { display: block; }
+
+  /* ---------- ToC panel (hamilton toc-rail style) ---------- */
+  .rail-panel.toc ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+  .rail-panel.toc li a {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--gray-700);
+    border-left: 2px solid transparent;
+    transition: background 100ms, border-color 100ms, color 100ms;
+  }
+  .rail-panel.toc li a:hover { background: var(--gray-150); color: var(--slate); }
+  .rail-panel.toc li a.active {
+    background: var(--gray-150);
+    border-left-color: var(--clay);
+    color: var(--slate);
+    font-weight: 600;
+  }
+  .rail-panel.toc .tnum {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--gray-500);
+    flex-shrink: 0;
+  }
+  .rail-panel.toc li a.active .tnum { color: var(--clay); }
+  .rail-panel.toc .ttitle { font-size: 12.5px; }
+
+  /* ---------- Glossary panel (hamilton-tight) ---------- */
+  .rail-panel.glossary dl { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .rail-panel.glossary dt {
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--slate);
+    margin-top: 4px;
+  }
+  .rail-panel.glossary dd {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    color: var(--gray-500);
+    line-height: 1.35;
+    margin-top: 2px;
+  }
+  .rail-panel.glossary dd code { font-size: 10.5px; }
+
+  /* ---------- Rail accordion (narrow viewport) ---------- */
+  details.rail-accordion {
+    margin: 0 0 28px;
+    border: 1.5px solid var(--gray-300);
+    border-radius: 6px;
+    background: var(--white);
+    max-width: 860px;
+  }
+  details.rail-accordion summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--slate); font-weight: 600;
+    list-style: none;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  details.rail-accordion summary::-webkit-details-marker { display: none; }
+  details.rail-accordion summary::after { content: "+"; font-size: 16px; color: var(--clay); }
+  details.rail-accordion[open] summary::after { content: "−"; }
+  details.rail-accordion .accordion-body {
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--gray-300);
+  }
+
+  .recap {
+    margin-top: 48px;
+    border-top: 2px solid var(--slate);
+    padding-top: 16px;
+    font-family: var(--serif); font-size: 16px;
+    color: var(--gray-700); max-width: 680px;
+    line-height: 1.6;
+  }
+  .recap b { color: var(--slate); }
+  .footer-meta {
+    margin-top: 32px;
+    font-family: var(--mono); font-size: 10.5px;
+    color: var(--gray-500); letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<main class="page">
+
+<header class="page-head">
+  <div class="eyebrow">Layer peel · keychain internals · 2026-05-14</div>
+  <h1>What actually happens when <code>twitter-cli</code> asks for your Keychain password</h1>
+  <div class="tldr" id="tldr">
+    <b>TL;DR.</b> One dialog you clicked through traverses seven distinct layers — a UI prompt, a userspace daemon,
+    an XPC boundary, a kernel-level keychain ACL check, an AES key release, a SQLite cookie blob, and finally an
+    HTTPS replay against X. The operator-relevant question is <i>"who in that stack is trustworthy and who is
+    merely audit-able?"</i> This doc peels the stack one boundary at a time and marks each layer with what you can
+    verify yourself vs. what you must accept on mechanism.
+  </div>
+</header>
+
+<!-- Rail accordion (narrow viewport only; CSS-hidden ≥1280px) -->
+<details class="rail-accordion" data-active-tab="toc">
+  <summary>Navigate</summary>
+  <div class="accordion-body">
+    <div class="rail-tabs" role="tablist" aria-label="Rail tabs">
+      <button type="button" data-tab="toc" class="active" aria-pressed="true">ToC</button>
+      <button type="button" data-tab="glossary" aria-pressed="false">Glossary</button>
+    </div>
+    <div class="rail-panel toc">
+      <ul>
+        <li><a href="#l1"><span class="tnum">01</span><span class="ttitle">L1 · Dialog</span></a></li>
+        <li><a href="#l2"><span class="tnum">02</span><span class="ttitle">L2 · Browser process</span></a></li>
+        <li><a href="#l3"><span class="tnum">03</span><span class="ttitle">L3 · XPC channel</span></a></li>
+        <li><a href="#l4"><span class="tnum">04</span><span class="ttitle">L4 · SecKeychain ACL</span></a></li>
+        <li><a href="#l5"><span class="tnum">05</span><span class="ttitle">L5 · AES key blob</span></a></li>
+        <li><a href="#l6"><span class="tnum">06</span><span class="ttitle">L6 · Cookies sqlite</span></a></li>
+        <li><a href="#l7"><span class="tnum">07</span><span class="ttitle">L7 · twitter-cli decrypt</span></a></li>
+        <li><a href="#l8"><span class="tnum">08</span><span class="ttitle">L8 · X GraphQL replay</span></a></li>
+        <li><a href="#trust"><span class="tnum">09</span><span class="ttitle">Trust surface</span></a></li>
+        <li><a href="#failures"><span class="tnum">10</span><span class="ttitle">Failures</span></a></li>
+        <li><a href="#recap"><span class="tnum">11</span><span class="ttitle">Recap</span></a></li>
+      </ul>
+    </div>
+    <div class="rail-panel glossary">
+      <dl>
+        <dt><a href="#l4">ACL</a></dt>
+        <dd>Access Control List. Per-keychain-item list of code-signing identities permitted to read it without prompting.</dd>
+        <dt><a href="#l7">AES-CBC</a></dt>
+        <dd>Symmetric block cipher in cipher-block-chaining mode. Chromium uses AES-128-CBC with a fixed 16-space IV.</dd>
+        <dt><a href="#l8">Bearer token</a></dt>
+        <dd>An auth credential where mere possession proves identity. Twitter's <code>auth_token</code> cookie is one.</dd>
+        <dt><a href="#l4">cdhash</a></dt>
+        <dd>Code-directory hash. The portion of a Mach-O signature that uniquely identifies a binary version. ACL entries compare against this.</dd>
+        <dt><a href="#l6">Cookies sqlite</a></dt>
+        <dd>Chromium's per-profile cookie database. Names are plaintext; values are AES-encrypted blobs prefixed with <code>v10</code>.</dd>
+        <dt><a href="#l8">ct0</a></dt>
+        <dd>Twitter's CSRF cookie. Must match the <code>x-csrf-token</code> header sent with API requests.</dd>
+        <dt><a href="#l8">GraphQL (internal)</a></dt>
+        <dd>x.com's private API at <code>/i/api/graphql/&lt;query-id&gt;/&lt;op&gt;</code>. Not documented; query IDs rotate.</dd>
+        <dt><a href="#l5">Keychain</a></dt>
+        <dd>macOS encrypted credential store. The "login" keychain is unlocked at user-login by your password.</dd>
+        <dt><a href="#l7">PBKDF2</a></dt>
+        <dd>Password-Based Key Derivation Function 2. Stretches a password into a key. Chromium parameters: HMAC-SHA1, 1003 iterations, salt <code>"saltysalt"</code>.</dd>
+        <dt><a href="#l7">PKCS7 padding</a></dt>
+        <dd>Block-cipher padding scheme. The last byte indicates how many padding bytes to strip after decryption.</dd>
+        <dt><a href="#l4">SecAccess</a></dt>
+        <dd>The Security.framework object representing an item's ACL. Inspect via Keychain Access.app.</dd>
+        <dt><a href="#l2">SecKeychain</a></dt>
+        <dd>The C API in Security.framework (e.g. <code>SecKeychainFindGenericPassword</code>) that user processes call to request items.</dd>
+        <dt><a href="#l3">securityd</a></dt>
+        <dd>The macOS daemon that owns keychain decryption, ACL enforcement, and prompt delegation. Runs as root.</dd>
+        <dt><a href="#l3">Snowflake</a></dt>
+        <dd>Twitter's 64-bit unique ID format for tweets. Not part of the keychain stack — appears in URLs you fetch.</dd>
+        <dt><a href="#l3">XPC</a></dt>
+        <dd>Apple's structured IPC over Mach messages. The protocol Python uses to reach <code>securityd</code>.</dd>
+        <dt><a href="#l6">v10 prefix</a></dt>
+        <dd>Three-byte marker on encrypted cookie values indicating Chromium's current encryption scheme version. Strip before decrypting.</dd>
+      </dl>
+    </div>
+  </div>
+</details>
+
+<figure class="stack" aria-label="Vertical layer stack diagram">
+<svg viewBox="0 0 680 520" xmlns="http://www.w3.org/2000/svg" role="img">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#788C5D"/>
+    </marker>
+    <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#B85C3E"/>
+    </marker>
+  </defs>
+
+  <!-- vertical guide -->
+  <line x1="340" y1="20" x2="340" y2="500" stroke="#D1CFC5" stroke-width="1" stroke-dasharray="3 4"/>
+
+  <!-- L1 -->
+  <g class="layer-arc">
+    <rect x="80" y="20" width="520" height="46" fill="#FAF9F5" stroke="#141413" stroke-width="1.2" rx="3"/>
+    <text class="lname" x="100" y="42" font-family="Georgia,serif" font-size="14" fill="#141413" font-weight="600">L1 · Dialog</text>
+    <text x="100" y="58" font-family="ui-monospace,Menlo" font-size="10.5" fill="#87867F">SecurityAgent.app — modal asks for login password</text>
+  </g>
+  <!-- L2 -->
+  <g class="layer-arc">
+    <rect x="80" y="80" width="520" height="46" fill="#FAF9F5" stroke="#141413" stroke-width="1.2" rx="3"/>
+    <text class="lname" x="100" y="102" font-family="Georgia,serif" font-size="14" fill="#141413" font-weight="600">L2 · Browser/CLI process</text>
+    <text x="100" y="118" font-family="ui-monospace,Menlo" font-size="10.5" fill="#87867F">python (uv) → SecKeychainFindGenericPassword()</text>
+  </g>
+  <!-- L3 -->
+  <g class="layer-arc">
+    <rect x="80" y="140" width="520" height="46" fill="#FAF9F5" stroke="#141413" stroke-width="1.2" rx="3"/>
+    <text class="lname" x="100" y="162" font-family="Georgia,serif" font-size="14" fill="#141413" font-weight="600">L3 · XPC channel</text>
+    <text x="100" y="178" font-family="ui-monospace,Menlo" font-size="10.5" fill="#87867F">mach message → securityd (root-owned daemon)</text>
+  </g>
+  <!-- L4 -->
+  <g class="layer-arc">
+    <rect x="80" y="200" width="520" height="46" fill="#FAF9F5" stroke="#141413" stroke-width="1.2" rx="3"/>
+    <text class="lname" x="100" y="222" font-family="Georgia,serif" font-size="14" fill="#141413" font-weight="600">L4 · SecKeychain ACL</text>
+    <text x="100" y="238" font-family="ui-monospace,Menlo" font-size="10.5" fill="#87867F">checks caller code signature vs trusted-app list</text>
+  </g>
+  <!-- L5 -->
+  <g class="layer-arc">
+    <rect x="80" y="260" width="520" height="46" fill="#FAF9F5" stroke="#141413" stroke-width="1.2" rx="3"/>
+    <text class="lname" x="100" y="282" font-family="Georgia,serif" font-size="14" fill="#141413" font-weight="600">L5 · AES key blob (Safe Storage)</text>
+    <text x="100" y="298" font-family="ui-monospace,Menlo" font-size="10.5" fill="#87867F">generic-password: "Microsoft Edge Safe Storage"</text>
+  </g>
+  <!-- L6 -->
+  <g class="layer-arc">
+    <rect x="80" y="320" width="520" height="46" fill="#FAF9F5" stroke="#141413" stroke-width="1.2" rx="3"/>
+    <text class="lname" x="100" y="342" font-family="Georgia,serif" font-size="14" fill="#141413" font-weight="600">L6 · Cookies sqlite</text>
+    <text x="100" y="358" font-family="ui-monospace,Menlo" font-size="10.5" fill="#87867F">~/Library/Application Support/Microsoft Edge/Default/Cookies</text>
+  </g>
+  <!-- L7 -->
+  <g class="layer-arc">
+    <rect x="80" y="380" width="520" height="46" fill="#FAF9F5" stroke="#141413" stroke-width="1.2" rx="3"/>
+    <text class="lname" x="100" y="402" font-family="Georgia,serif" font-size="14" fill="#141413" font-weight="600">L7 · twitter-cli decrypt</text>
+    <text x="100" y="418" font-family="ui-monospace,Menlo" font-size="10.5" fill="#87867F">PBKDF2-SHA1 (1003 iters, "saltysalt") → AES-128-CBC</text>
+  </g>
+  <!-- L8 -->
+  <g class="layer-arc">
+    <rect x="80" y="440" width="520" height="46" fill="#FAF9F5" stroke="#141413" stroke-width="1.2" rx="3"/>
+    <text class="lname" x="100" y="462" font-family="Georgia,serif" font-size="14" fill="#141413" font-weight="600">L8 · x.com /i/api/graphql</text>
+    <text x="100" y="478" font-family="ui-monospace,Menlo" font-size="10.5" fill="#87867F">HTTPS replay with auth_token + ct0 cookies</text>
+  </g>
+
+  <!-- Down arrow (request) -->
+  <line x1="40" y1="30" x2="40" y2="490" stroke="#788C5D" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="20" y="260" font-family="ui-monospace,Menlo" font-size="10" fill="#788C5D" transform="rotate(-90 28 260)">request descends</text>
+
+  <!-- Up arrow (data) -->
+  <line x1="640" y1="490" x2="640" y2="30" stroke="#B85C3E" stroke-width="1.4" marker-end="url(#ad)"/>
+  <text x="624" y="260" font-family="ui-monospace,Menlo" font-size="10" fill="#B85C3E" transform="rotate(-90 632 260)">data ascends</text>
+</svg>
+<figcaption>The descent. Each band is one boundary; hover to highlight. Olive = your intent descending, clay = secret material returning.</figcaption>
+</figure>
+
+<!-- ============== L1 ============== -->
+<section class="layer" id="l1">
+  <h2><span class="lvl">L1</span>The dialog you clicked: who is actually asking?</h2>
+  <p class="purpose">The modal is a userland UI process, not the kernel — but it is the <i>only</i> layer where you have agency.</p>
+  <div class="who"><b>Responsible:</b> <code>SecurityAgent.app</code> (Apple-signed, launched by <code>launchd</code> on demand). The text "<i>security wants to use your confidential information stored in Microsoft Edge Safe Storage</i>" is composed from the requesting binary's name and the keychain item's <code>kSecAttrService</code>.</div>
+
+  <div class="boundary">
+    <div><div class="label">Crosses in</div>A request handle from <code>securityd</code> naming the keychain item and caller PID.</div>
+    <div><div class="label">Crosses out</div>Your typed password (UTF-8 bytes), or a Deny verdict. The bytes never return to the calling process.</div>
+  </div>
+
+  <div class="verify"><span class="tag">Verify</span> Run <code>ps aux | grep -i securityagent</code> while the dialog is up — you will see the helper alive only during the prompt.</div>
+
+  <blockquote class="misconception">
+    <span class="tag">Wrong mental model</span>
+    <b>"twitter-cli is asking for my password."</b> No. <code>twitter-cli</code> never sees, requests, or has any path to your login password. It asked <code>securityd</code> for a keychain item; <code>securityd</code> in turn asked <code>SecurityAgent</code> to confirm with you. You are authenticating to <i>macOS</i>, not to the Python process.
+  </blockquote>
+</section>
+
+<!-- ============== L2 ============== -->
+<section class="layer" id="l2">
+  <h2><span class="lvl">L2</span>The calling process: what does Python actually invoke?</h2>
+  <p class="purpose">A user-space binary makes one library call and waits for bytes.</p>
+  <div class="who"><b>Responsible:</b> the Python interpreter spawned by <code>uv run twitter-cli</code>, calling into <code>Security.framework</code> via <code>ctypes</code> (or, in the subprocess fallback, shelling out to <code>/usr/bin/security</code>).</div>
+
+<pre><span class="cm"># the literal subprocess fallback path</span>
+$ security find-generic-password -s "Microsoft Edge Safe Storage" -w
+<span class="cm"># macOS shows the Keychain prompt; on success, prints the AES-master-string</span></pre>
+
+  <div class="boundary">
+    <div><div class="label">Crosses in (down)</div>A service name string (<code>"Microsoft Edge Safe Storage"</code>) and the caller's own code-signing identity, auto-attached by libSystem.</div>
+    <div><div class="label">Crosses out (up)</div>A base64-ish password string — the input to PBKDF2 at L7. <i>Not</i> the AES key itself.</div>
+  </div>
+
+  <div class="trust"><span class="tag">Trust</span> You can audit the open-source <code>twitter-cli</code> source for exactly this call and confirm it does nothing else with the returned string until L7 derivation.</div>
+</section>
+
+<!-- ============== L3 ============== -->
+<section class="layer" id="l3">
+  <h2><span class="lvl">L3</span>The XPC hop: why does this need a daemon at all?</h2>
+  <p class="purpose">User processes cannot touch the keychain file directly. They must go through a privilege-separated broker.</p>
+  <div class="who"><b>Responsible:</b> <code>securityd</code> (on modern macOS, technically <code>trustd</code> + <code>secinitd</code> + <code>SecurityAgent</code>; the umbrella behavior is unchanged for our purposes). Communication is Mach IPC framed as XPC messages.</div>
+
+  <div class="boundary">
+    <div><div class="label">Crosses in</div>An XPC dictionary: <code>{op: find_generic, service: "Microsoft Edge Safe Storage", account: ..., audit_token: ...}</code>.</div>
+    <div><div class="label">Crosses out</div>Either the password payload or an <code>errSecAuthFailed</code> / <code>errSecUserCanceled</code> status code.</div>
+  </div>
+
+  <div class="verify"><span class="tag">Verify</span> <code>log stream --predicate 'subsystem == "com.apple.securityd"'</code> shows the request transit in real time.</div>
+
+  <blockquote class="misconception">
+    <span class="tag">Wrong mental model</span>
+    <b>"The browser holds the AES key in memory, why doesn't it just hand it to other tools directly?"</b> Because every requester is reauthenticated against the keychain item's ACL by an out-of-process daemon. The browser cannot delegate; <code>securityd</code> is the only authority. This is why a fresh Python interpreter triggers a prompt even though Edge is running and "knows" the key.
+  </blockquote>
+</section>
+
+<!-- ============== L4 ============== -->
+<section class="layer" id="l4">
+  <h2><span class="lvl">L4</span>The ACL check: why your second run didn't prompt</h2>
+  <p class="purpose">Each keychain item has an access-control list of code-signing identities. New identities trigger a user prompt; remembered ones don't.</p>
+  <div class="who"><b>Responsible:</b> <code>securityd</code> compares the caller's audit token (cdhash of the binary) against the item's <code>SecAccess</code> ACL. Unknown caller ⇒ delegate to <code>SecurityAgent</code> (L1). Known + "Always Allow" ⇒ release silently.</div>
+
+  <div class="boundary">
+    <div><div class="label">Crosses in</div>Caller cdhash, requested operation (decrypt/read), item ACL entries.</div>
+    <div><div class="label">Crosses out</div>A boolean release/deny, plus side-effect: if the user clicks "Always Allow", the caller's cdhash is appended to the item's trusted-app list.</div>
+  </div>
+
+  <div class="verify"><span class="tag">Verify</span> Open <code>Keychain Access.app</code> → "login" keychain → search "Edge Safe Storage" → <i>Access Control</i> tab. You can see which binaries have been granted "always allow" and revoke them.</div>
+
+  <div class="trust"><span class="tag">Trust</span> The ACL match itself runs inside <code>securityd</code> as root. You cannot audit the comparison from userspace; you must accept the mechanism, but you <i>can</i> observe its decisions via Keychain Access.</div>
+</section>
+
+<!-- ============== L5 ============== -->
+<section class="layer" id="l5">
+  <h2><span class="lvl">L5</span>The key blob: what's literally stored in Keychain?</h2>
+  <p class="purpose">A short opaque string — not an AES key, but the password from which one is derived.</p>
+  <div class="who"><b>Responsible:</b> the encrypted <code>login.keychain-db</code> file at <code>~/Library/Keychains/login.keychain-db</code>. The Safe Storage entry is a <code>kSecClassGenericPassword</code> item with <code>service = "Microsoft Edge Safe Storage"</code>.</div>
+
+  <div class="boundary">
+    <div><div class="label">Crosses in</div>Nothing routinely — written once when Edge first runs and generates the random password, then read-only.</div>
+    <div><div class="label">Crosses out</div>A random-looking ~16-byte base64-encoded string (the "Safe Storage password"), released to authorized callers only.</div>
+  </div>
+
+  <div class="trust"><span class="tag">Trust</span> The on-disk <code>login.keychain-db</code> is itself AES-encrypted under a key derived from your login password — the same password L1 just asked for. Without it, the blob is opaque even with root file read.</div>
+
+  <blockquote class="misconception">
+    <span class="tag">Wrong mental model</span>
+    <b>"Keychain is just a glorified plaintext file with permissions."</b> No — it is an encrypted vault whose master key never sits on disk. Even <code>sudo cat login.keychain-db</code> yields ciphertext. The ACL is enforced inside <code>securityd</code> after decryption, not by filesystem permissions.
+  </blockquote>
+</section>
+
+<!-- ============== L6 ============== -->
+<section class="layer" id="l6">
+  <h2><span class="lvl">L6</span>The cookies file: where the secret you actually care about lives</h2>
+  <p class="purpose">A SQLite database with plaintext cookie <i>names</i> but encrypted cookie <i>values</i>.</p>
+  <div class="who"><b>Responsible:</b> <code>~/Library/Application Support/Microsoft Edge/Default/Cookies</code> (file owned by your user, mode 0600). Schema row of interest: <code>host_key='.x.com'</code>, <code>name='auth_token'</code>, <code>encrypted_value=BLOB</code>. <i>Edge must be closed</i> — it holds an exclusive lock while running.</div>
+
+  <div class="boundary">
+    <div><div class="label">Crosses in</div>Nothing from twitter-cli (read-only open). The browser is the only writer.</div>
+    <div><div class="label">Crosses out</div>A <code>BLOB</code> prefixed with the three bytes <code>v10</code> followed by AES-CBC ciphertext.</div>
+  </div>
+
+  <div class="verify"><span class="tag">Verify</span> <code>lsof | grep "Edge/Default/Cookies"</code> shows whether anything currently has the file open. <code>sqlite3 .../Cookies "SELECT name, host_key FROM cookies WHERE host_key LIKE '%x.com%';"</code> reads names without ever touching values.</div>
+</section>
+
+<!-- ============== L7 ============== -->
+<section class="layer" id="l7">
+  <h2><span class="lvl">L7</span>The decrypt step: why isn't the AES key just stored directly?</h2>
+  <p class="purpose">Chromium derives the actual AES key from the keychain password using fixed PBKDF2 parameters. Compromise of the cookies file alone yields nothing.</p>
+  <div class="who"><b>Responsible:</b> <code>twitter-cli</code>'s Python code, mirroring Chromium's <code>os_crypt</code> internals.</div>
+
+<pre><span class="cm"># Pseudocode (chromium/components/os_crypt internals)</span>
+key = pbkdf2_hmac(
+  hash_name = "sha1",
+  password  = safe_storage_string.encode(),
+  salt      = b"saltysalt",
+  iterations= <span class="hl">1003</span>,
+  dklen     = 16,
+)
+iv = b" " * 16  <span class="cm"># 16 spaces — chromium constant</span>
+<span class="cm"># encrypted_value blob is "v10" || ciphertext</span>
+plaintext = AES_CBC_decrypt(key, iv, encrypted_value[3:])
+auth_token = strip_pkcs7_padding(plaintext)</pre>
+
+  <div class="boundary">
+    <div><div class="label">Crosses in</div>L5 password + L6 ciphertext blob. Both required; either alone is useless.</div>
+    <div><div class="label">Crosses out</div>The literal <code>auth_token</code> and <code>ct0</code> strings — bit-identical to what your browser sends on every <code>x.com</code> request.</div>
+  </div>
+
+  <div class="verify"><span class="tag">Verify</span> Open Edge devtools on <code>x.com</code>, Application → Cookies, copy <code>auth_token</code>. Compare against what <code>twitter-cli</code> uses (instrument once, then revoke). They match byte-for-byte.</div>
+
+  <div class="trust"><span class="tag">Trust</span> The 1003-iteration count is famously low by modern standards — but irrelevant here, since the input is already a high-entropy random password, not a human-chosen one. Brute force is not the threat model.</div>
+</section>
+
+<!-- ============== L8 ============== -->
+<section class="layer" id="l8">
+  <h2><span class="lvl">L8</span>The replay: how does X tell this is "you"?</h2>
+  <p class="purpose">It can't, and that's the point. Cookie-auth is bearer-auth; the server has no way to distinguish your browser from your CLI.</p>
+  <div class="who"><b>Responsible:</b> <code>twitter-cli</code>'s HTTP client → <code>https://x.com/i/api/graphql/&lt;query-id&gt;/TweetDetail</code>, with the recovered cookies, the public web bearer, and a <code>x-csrf-token</code> matching <code>ct0</code>.</div>
+
+<pre>GET https://x.com/i/api/graphql/&lt;query-id&gt;/TweetDetail?variables=...
+Cookie: auth_token=...; ct0=...
+Authorization: Bearer AAAAAAAAAA...8FtkA
+x-csrf-token: &lt;ct0 value&gt;
+x-twitter-active-user: yes
+x-twitter-auth-type: OAuth2Session</pre>
+
+  <div class="boundary">
+    <div><div class="label">Crosses in</div>Your cookies, over your network, indistinguishable from a browser request.</div>
+    <div><div class="label">Crosses out</div>The full <code>TweetResult</code> JSON (text, metrics, media URLs), shaped into the YAML the skill emits.</div>
+  </div>
+
+  <blockquote class="misconception">
+    <span class="tag">Wrong mental model</span>
+    <b>"X has rate-limited my CLI separately from my browser."</b> Unlikely. Server-side it is the same session; if you hit a limit it is the session's limit. Distinct CLI fingerprints are at the TLS/headers layer — easy to mimic and not currently a meaningful gate.
+  </blockquote>
+</section>
+
+<!-- ============== Trust surface ============== -->
+<h2 id="trust">Trust surface — assets vs. who touches them</h2>
+<table>
+  <thead>
+    <tr><th>Asset</th><th>Who touches it</th><th>Scope</th><th>Failure impact</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>macOS login password</td><td><code>SecurityAgent</code> only</td><td>Modal dialog input</td><td>None — never reaches Python</td></tr>
+    <tr><td>login.keychain-db ciphertext</td><td><code>securityd</code> reads, kernel-level</td><td>On disk at rest</td><td>Useless without login password</td></tr>
+    <tr><td>Edge Safe Storage password (L5)</td><td><code>twitter-cli</code> in-memory</td><td>Process lifetime</td><td>Medium — anyone running as you can refetch it</td></tr>
+    <tr><td>Cookies sqlite (L6)</td><td>Edge writes; <code>twitter-cli</code> reads</td><td>File at rest, user-only mode 0600</td><td>Low alone — ciphertext requires L5 to decrypt</td></tr>
+    <tr><td><code>auth_token</code> + <code>ct0</code> (L7→L8)</td><td><code>twitter-cli</code>, then over TLS to x.com</td><td>HTTPS to X internal API</td><td><b>High</b> — equivalent to logged-in session. Do not log.</td></tr>
+    <tr><td>X account itself</td><td>x.com server with cookies</td><td>Anywhere session is replayed</td><td>High — read tweets, read DMs (with right tokens), follow/unfollow</td></tr>
+  </tbody>
+</table>
+
+<!-- ============== Failures ============== -->
+<h2 id="failures">Failure mode inventory — which layer broke?</h2>
+<table>
+  <thead><tr><th>Symptom / error</th><th>Layer</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>"Twitter cookie extraction failed in both in-process and subprocess modes"</code></td>
+      <td>L1 (denied) or L6 (locked)</td>
+      <td>Click Allow; or close Edge to release the SQLite lock.</td>
+    </tr>
+    <tr>
+      <td><code>errSecAuthFailed</code> / dialog re-appears every run</td>
+      <td>L4 (ACL not persisted)</td>
+      <td>Click "Always Allow" once; verify in Keychain Access → item → Access Control.</td>
+    </tr>
+    <tr>
+      <td><code>sqlite3.OperationalError: database is locked</code></td>
+      <td>L6</td>
+      <td>Quit Edge fully (not just close window); retry.</td>
+    </tr>
+    <tr>
+      <td>Garbled cookie value, decryption "succeeds" but yields binary noise</td>
+      <td>L7 (wrong key derivation)</td>
+      <td>Confirm <code>v10</code> prefix; iteration count 1003; salt <code>"saltysalt"</code>; 16-space IV.</td>
+    </tr>
+    <tr>
+      <td>x.com returns <code>401</code> or <code>403</code></td>
+      <td>L8 (or upstream cookie staleness)</td>
+      <td>Re-login in the browser so a fresh <code>auth_token</code> is written; rerun.</td>
+    </tr>
+    <tr>
+      <td>x.com returns <code>429</code></td>
+      <td>L8 (session-scoped)</td>
+      <td>Back off; remember rate is shared with your browser activity.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ============== Recap ============== -->
+<div class="recap" id="recap">
+  <b>Demystifying recap.</b> The Keychain prompt was not a security theater step — it was the one moment in an eight-layer pipeline where you, the human, sit in the loop. Below the dialog, <code>securityd</code> brokers an ACL check, releases a short random string, and that string feeds a fixed-parameter PBKDF2 that yields the AES key Chromium uses to encrypt one column of one SQLite file. <code>twitter-cli</code> reads that column, decrypts it with the derived key, and replays the recovered cookies against X's normal API. There is no novel cryptography, no Twitter-side cooperation, and no privileged escalation. There is a chain of code-signing-gated boundaries that you can audit at L1, L2, L4, L6, and L7, and that you must trust on mechanism at L3 and L5. That is the entire system.
+</div>
+
+<div class="footer-meta">
+  Env-dependent: macOS 14+ (Sonoma/Sequoia), Edge ≥ 120 / any current Chromium fork. Linux uses libsecret; Windows uses DPAPI; both replace L1–L5 entirely. Iteration count, salt string, and IV constant are taken verbatim from the source trace doc.
+</div>
+
+</main>
+
+<!-- ============== Rail (wide viewport sidebar) ============== -->
+<aside class="rail" data-active-tab="toc" aria-label="Page navigation">
+  <div class="rail-tabs" role="tablist" aria-label="Rail tabs">
+    <button type="button" data-tab="toc" class="active" aria-pressed="true">ToC</button>
+    <button type="button" data-tab="glossary" aria-pressed="false">Glossary</button>
+  </div>
+  <div class="rail-panel toc">
+    <ul>
+      <li><a href="#l1"><span class="tnum">01</span><span class="ttitle">L1 · Dialog</span></a></li>
+      <li><a href="#l2"><span class="tnum">02</span><span class="ttitle">L2 · Browser process</span></a></li>
+      <li><a href="#l3"><span class="tnum">03</span><span class="ttitle">L3 · XPC channel</span></a></li>
+      <li><a href="#l4"><span class="tnum">04</span><span class="ttitle">L4 · SecKeychain ACL</span></a></li>
+      <li><a href="#l5"><span class="tnum">05</span><span class="ttitle">L5 · AES key blob</span></a></li>
+      <li><a href="#l6"><span class="tnum">06</span><span class="ttitle">L6 · Cookies sqlite</span></a></li>
+      <li><a href="#l7"><span class="tnum">07</span><span class="ttitle">L7 · twitter-cli decrypt</span></a></li>
+      <li><a href="#l8"><span class="tnum">08</span><span class="ttitle">L8 · X GraphQL replay</span></a></li>
+      <li><a href="#trust"><span class="tnum">09</span><span class="ttitle">Trust surface</span></a></li>
+      <li><a href="#failures"><span class="tnum">10</span><span class="ttitle">Failures</span></a></li>
+      <li><a href="#recap"><span class="tnum">11</span><span class="ttitle">Recap</span></a></li>
+    </ul>
+  </div>
+  <div class="rail-panel glossary">
+    <dl>
+      <dt><a href="#l4">ACL</a></dt>
+      <dd>Access Control List. Per-keychain-item list of code-signing identities permitted to read it without prompting.</dd>
+      <dt><a href="#l7">AES-CBC</a></dt>
+      <dd>Symmetric block cipher in cipher-block-chaining mode. Chromium uses AES-128-CBC with a fixed 16-space IV.</dd>
+      <dt><a href="#l8">Bearer token</a></dt>
+      <dd>An auth credential where mere possession proves identity. Twitter's <code>auth_token</code> cookie is one.</dd>
+      <dt><a href="#l4">cdhash</a></dt>
+      <dd>Code-directory hash. The portion of a Mach-O signature that uniquely identifies a binary version. ACL entries compare against this.</dd>
+      <dt><a href="#l6">Cookies sqlite</a></dt>
+      <dd>Chromium's per-profile cookie database. Names are plaintext; values are AES-encrypted blobs prefixed with <code>v10</code>.</dd>
+      <dt><a href="#l8">ct0</a></dt>
+      <dd>Twitter's CSRF cookie. Must match the <code>x-csrf-token</code> header sent with API requests.</dd>
+      <dt><a href="#l8">GraphQL (internal)</a></dt>
+      <dd>x.com's private API at <code>/i/api/graphql/&lt;query-id&gt;/&lt;op&gt;</code>. Not documented; query IDs rotate.</dd>
+      <dt><a href="#l5">Keychain</a></dt>
+      <dd>macOS encrypted credential store. The "login" keychain is unlocked at user-login by your password.</dd>
+      <dt><a href="#l7">PBKDF2</a></dt>
+      <dd>Password-Based Key Derivation Function 2. Stretches a password into a key. Chromium parameters: HMAC-SHA1, 1003 iterations, salt <code>"saltysalt"</code>.</dd>
+      <dt><a href="#l7">PKCS7 padding</a></dt>
+      <dd>Block-cipher padding scheme. The last byte indicates how many padding bytes to strip after decryption.</dd>
+      <dt><a href="#l4">SecAccess</a></dt>
+      <dd>The Security.framework object representing an item's ACL. Inspect via Keychain Access.app.</dd>
+      <dt><a href="#l2">SecKeychain</a></dt>
+      <dd>The C API in Security.framework (e.g. <code>SecKeychainFindGenericPassword</code>) that user processes call to request items.</dd>
+      <dt><a href="#l3">securityd</a></dt>
+      <dd>The macOS daemon that owns keychain decryption, ACL enforcement, and prompt delegation. Runs as root.</dd>
+      <dt><a href="#l3">Snowflake</a></dt>
+      <dd>Twitter's 64-bit unique ID format for tweets. Not part of the keychain stack — appears in URLs you fetch.</dd>
+      <dt><a href="#l3">XPC</a></dt>
+      <dd>Apple's structured IPC over Mach messages. The protocol Python uses to reach <code>securityd</code>.</dd>
+      <dt><a href="#l6">v10 prefix</a></dt>
+      <dd>Three-byte marker on encrypted cookie values indicating Chromium's current encryption scheme version. Strip before decrypting.</dd>
+    </dl>
+  </div>
+</aside>
+
+</div>
+
+<script>
+  // SVG layer click → scroll to section
+  document.querySelectorAll('svg g.layer-arc').forEach(function(g, i) {
+    g.addEventListener('click', function() {
+      var ids = ['l1','l2','l3','l4','l5','l6','l7','l8'];
+      var t = document.getElementById(ids[i]);
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Rail tab switch (toc | glossary) — toggles data-active-tab on each rail container.
+  document.querySelectorAll('.rail, .rail-accordion').forEach(function (container) {
+    container.querySelectorAll('.rail-tabs button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tab = btn.getAttribute('data-tab');
+        container.setAttribute('data-active-tab', tab);
+        container.querySelectorAll('.rail-tabs button').forEach(function (b) {
+          var active = b.getAttribute('data-tab') === tab;
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+      });
+    });
+  });
+
+  // Active-on-scroll for ToC entries via IntersectionObserver.
+  (function () {
+    var sectionIds = ['l1','l2','l3','l4','l5','l6','l7','l8','trust','failures','recap'];
+    var tocLinks = document.querySelectorAll('.rail-panel.toc a[href^="#"]');
+    function setActive(id) {
+      tocLinks.forEach(function (a) {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) setActive(e.target.id);
+      });
+    }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+    sectionIds.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) obs.observe(el);
+    });
+  })();
+</script>
+</body>
+</html>

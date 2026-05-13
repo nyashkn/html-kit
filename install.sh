@@ -8,71 +8,82 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE="${REPO_ROOT}/skill/html-kit"
 AGENTS_DIR="${HOME}/.agents/skills"
 CLAUDE_DIR="${HOME}/.claude/skills"
-AGENTS_LINK="${AGENTS_DIR}/html-kit"
-CLAUDE_LINK="${CLAUDE_DIR}/html-kit"
+
+# All skills under skill/ get installed. Add new sub-skills by dropping a
+# directory under skill/ and re-running ./install.sh — no edits needed here.
+SKILLS=()
+for dir in "${REPO_ROOT}"/skill/*/; do
+  [[ -d "$dir" && -f "$dir/SKILL.md" ]] && SKILLS+=("$(basename "$dir")")
+done
 
 if [[ "${1:-}" == "--uninstall" ]]; then
   echo "→ uninstalling html-kit symlinks"
-  [[ -L "$CLAUDE_LINK" ]] && rm "$CLAUDE_LINK" && echo "  removed $CLAUDE_LINK"
-  [[ -L "$AGENTS_LINK" ]] && rm "$AGENTS_LINK" && echo "  removed $AGENTS_LINK"
+  for name in "${SKILLS[@]}"; do
+    [[ -L "${CLAUDE_DIR}/${name}" ]] && rm "${CLAUDE_DIR}/${name}" && echo "  removed ${CLAUDE_DIR}/${name}"
+    [[ -L "${AGENTS_DIR}/${name}" ]] && rm "${AGENTS_DIR}/${name}" && echo "  removed ${AGENTS_DIR}/${name}"
+  done
   echo "✓ uninstalled"
   exit 0
 fi
 
-if [[ ! -d "$SOURCE" ]]; then
-  echo "✗ source skill missing: $SOURCE" >&2
-  exit 1
-fi
-if [[ ! -f "$SOURCE/SKILL.md" ]]; then
-  echo "✗ SKILL.md missing in source: $SOURCE/SKILL.md" >&2
+if [[ ${#SKILLS[@]} -eq 0 ]]; then
+  echo "✗ no skills found under ${REPO_ROOT}/skill/" >&2
   exit 1
 fi
 
 mkdir -p "$AGENTS_DIR" "$CLAUDE_DIR"
 
-# Tier 1: ~/.agents/skills/html-kit → repo source
-if [[ -L "$AGENTS_LINK" ]]; then
-  current="$(readlink "$AGENTS_LINK")"
-  if [[ "$current" == "$SOURCE" ]]; then
-    echo "→ ~/.agents/skills/html-kit already → $SOURCE"
-  else
-    echo "→ updating ~/.agents/skills/html-kit (was: $current)"
-    rm "$AGENTS_LINK"
-    ln -s "$SOURCE" "$AGENTS_LINK"
-  fi
-elif [[ -e "$AGENTS_LINK" ]]; then
-  echo "✗ ~/.agents/skills/html-kit exists but is not a symlink — refusing to overwrite" >&2
-  exit 1
-else
-  ln -s "$SOURCE" "$AGENTS_LINK"
-  echo "→ linked ~/.agents/skills/html-kit → $SOURCE"
-fi
+link_skill() {
+  local name="$1"
+  local source="${REPO_ROOT}/skill/${name}"
+  local agents_link="${AGENTS_DIR}/${name}"
+  local claude_link="${CLAUDE_DIR}/${name}"
 
-# Tier 2: ~/.claude/skills/html-kit → ~/.agents/skills/html-kit
-if [[ -L "$CLAUDE_LINK" ]]; then
-  current="$(readlink "$CLAUDE_LINK")"
-  if [[ "$current" == "$AGENTS_LINK" ]]; then
-    echo "→ ~/.claude/skills/html-kit already → $AGENTS_LINK"
+  # Tier 1: ~/.agents/skills/<name> → repo source
+  if [[ -L "$agents_link" ]]; then
+    local current; current="$(readlink "$agents_link")"
+    if [[ "$current" == "$source" ]]; then
+      echo "  ~/.agents/skills/${name} already → $source"
+    else
+      echo "  updating ~/.agents/skills/${name} (was: $current)"
+      rm "$agents_link"
+      ln -s "$source" "$agents_link"
+    fi
+  elif [[ -e "$agents_link" ]]; then
+    echo "✗ ~/.agents/skills/${name} exists but is not a symlink — refusing to overwrite" >&2
+    return 1
   else
-    echo "→ updating ~/.claude/skills/html-kit (was: $current)"
-    rm "$CLAUDE_LINK"
-    ln -s "$AGENTS_LINK" "$CLAUDE_LINK"
+    ln -s "$source" "$agents_link"
+    echo "  linked ~/.agents/skills/${name} → $source"
   fi
-elif [[ -e "$CLAUDE_LINK" ]]; then
-  echo "✗ ~/.claude/skills/html-kit exists but is not a symlink — refusing to overwrite" >&2
-  exit 1
-else
-  ln -s "$AGENTS_LINK" "$CLAUDE_LINK"
-  echo "→ linked ~/.claude/skills/html-kit → $AGENTS_LINK"
-fi
+
+  # Tier 2: ~/.claude/skills/<name> → ~/.agents/skills/<name>
+  if [[ -L "$claude_link" ]]; then
+    local current; current="$(readlink "$claude_link")"
+    if [[ "$current" == "$agents_link" ]]; then
+      echo "  ~/.claude/skills/${name} already → $agents_link"
+    else
+      echo "  updating ~/.claude/skills/${name} (was: $current)"
+      rm "$claude_link"
+      ln -s "$agents_link" "$claude_link"
+    fi
+  elif [[ -e "$claude_link" ]]; then
+    echo "✗ ~/.claude/skills/${name} exists but is not a symlink — refusing to overwrite" >&2
+    return 1
+  else
+    ln -s "$agents_link" "$claude_link"
+    echo "  linked ~/.claude/skills/${name} → $agents_link"
+  fi
+}
+
+for name in "${SKILLS[@]}"; do
+  echo "→ ${name}"
+  link_skill "$name"
+done
 
 echo
-echo "✓ html-kit installed"
-echo "  source : $SOURCE"
-echo "  agents : $AGENTS_LINK → $(readlink "$AGENTS_LINK")"
-echo "  claude : $CLAUDE_LINK → $(readlink "$CLAUDE_LINK")"
+echo "✓ html-kit installed (${#SKILLS[@]} skill(s): ${SKILLS[*]})"
 echo
-echo "Restart Claude Code to pick up the skill, then invoke /html-kit"
+echo "Restart Claude Code to pick up the skills, then invoke /html-kit or /html-kit:add-to-patterns"
