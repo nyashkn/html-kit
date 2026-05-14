@@ -8,3 +8,6 @@
 - Inline SVG; arrows need real coords. Don't try CSS for this.
 - Click-to-reveal node detail (JS toggle a side panel or `<details>` near the diagram).
 - Show the happy path as solid lines, failure paths as `stroke-dasharray` w/ `--rose`.
+
+## Patterns
+- `patterns/swimlane-flow.md` — multi-actor lanes × stage columns w/ failure-path edges.
