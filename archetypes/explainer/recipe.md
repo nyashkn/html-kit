@@ -15,3 +15,6 @@
 - Hover-linked glossary or file references inline, not a footer dump.
 - Comparison table needs a "best for" column; concept-vs-concept tables are useless without one.
 - Layered flavour: dual-axis rails carry the narrative — don't bury them in CSS, they're the point. Caption below decodes color = down-arrow direction (e.g. olive=intent descends, clay=data ascends).
+
+## Patterns
+- `patterns/swimlane-flow.md` — multi-actor lanes × stage columns w/ failure-path edges.

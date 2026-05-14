@@ -8,3 +8,6 @@
 - Inline SVG for the diagram; don't try CSS-grid the boxes — arrows need real coords.
 - Highlight the hot path with `--clay` strokes; everything else `--g500`.
 - Pair the diagram with a list of entry points and a 3-line "where to start reading" note.
+
+## Patterns
+- `patterns/swimlane-flow.md` — multi-actor lanes × stage columns w/ failure-path edges.
