@@ -1,9 +1,60 @@
-# Delegation rationale for html-kit Step 0
+# Delegation patterns — full deliberation
 
-Read this when deciding render pattern for an unusual case (multi-artifact,
-pipeline integration, very long render) or when explaining the rule to the user.
+This is the long-form material extracted from SKILL.md Step 0 in v0.3.0 for
+context-budget reasons. The condensed decision rule lives in SKILL.md Step 0.
+Read here when an unusual case arises or when you need full rationale.
 
-For routine renders, the cheatsheet in SKILL.md Step 0 is enough.
+---
+
+## Four-pattern table (from SKILL.md v0.2.x Step 0)
+
+Four patterns. Pick by task signature, not reflex.
+
+| Pattern | Model | Context handoff | Use when |
+|---|---|---|---|
+| **A. Inline (default)** | Opus (main) | None — main has it | User actively iterating · output <500 lines · no parallel work waiting · taste shaping in-thread |
+| **B. Sonnet sub-agent** | Sonnet | Brief.md (lossy) | Narrow: ALL of (pre-spec'd output, pre-shaped data, one-shot, reference render exists) |
+| **C. Opus sub-agent** | Opus (peer) | Verbose brief w/ full convo excerpt + reference render path | Main has parallel work · context budget tight (>70%) · output >500 lines · taste matters but main blocked |
+| **D. Agent team** | Opus × N | Shared task list + msg-passing | Render is synthesis step in a pipeline already running sub-agents (`/search:deep`, `/council`) · multi-artifact set (3+ related HTML files) |
+
+**Hard signals:**
+- Brief longer than the diff from inline render → A.
+- Would need to paste conversation transcript verbatim → A or C (never B).
+- Already running ≥2 sub-agents in this turn → D (don't fresh-delegate).
+- Output >1500 lines OR main near compaction → C minimum, D if pipeline.
+
+**Never Haiku** for HTML >300 lines (loses global coherence — callouts drift,
+emphasis flattens). Haiku acceptable only for fully-deterministic <500 line
+templating w/ no taste calls.
+
+**Pipeline integration hooks:**
+- `/search:deep` synthesis → spawn render-teammate w/ access to research-agent
+  outputs (D, not C).
+- `/council` synthesis → render-teammate sees all persona outputs directly via
+  shared task list.
+- Multi-artifact deliveries → 1 main + N render-teammates parallel.
+
+**Delegation skeleton (B/C):**
+1. Brief at `/tmp/render-brief-<topic>.md`:
+   - Source content **verbatim** (summarization kills intent for B/C)
+   - Archetype slug + reason
+   - Output path
+   - Reference render path (the prior aesthetic anchor)
+   - User constraints (palette, voice, sections to emphasize)
+2. Spawn `general-purpose` sub-agent. `model: opus` for C, `model: sonnet` for B:
+   > "Read /tmp/render-brief-<topic>.md. Read the html-kit SKILL at
+   > ~/.claude/skills/html-kit/SKILL.md. Follow Steps 2-9. Report the
+   > absolute output path. Nothing else."
+3. `run_in_background: true` only if user signaled bg or main has parallel
+   work. Default foreground.
+4. Main runs `open <path>` and Step 9 follow-up.
+
+**Agent team skeleton (D):** see Claude Code agent-teams docs
+(https://code.claude.com/docs/en/agent-teams). Give the render-teammate
+access to upstream sub-agent outputs via shared task list, not a copy-paste
+brief.
+
+---
 
 ## How the 4-pattern fork was reached
 

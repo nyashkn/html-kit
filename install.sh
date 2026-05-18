@@ -7,6 +7,9 @@
 
 set -euo pipefail
 
+# Preflight: bun is required for html-kit helper scripts
+command -v bun >/dev/null 2>&1 || { echo "html-kit requires bun. Install: curl -fsSL https://bun.sh/install | bash"; exit 1; }
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENTS_DIR="${HOME}/.agents/skills"
 CLAUDE_DIR="${HOME}/.claude/skills"
