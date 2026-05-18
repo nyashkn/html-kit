@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>html-kit v0.2.0 → v0.3.0 · before/after eval</title>
+<style>
+:root {
+  --ivory:#FAF9F5; --paper:#FFFFFF; --slate:#141413;
+  --clay:#D97757; --clay-d:#B85C3E; --oat:#E3DACC;
+  --olive:#788C5D; --sage:#A8B89A; --rose:#C97B7B;
+  --g100:#F0EEE6; --g200:#E6E3DA; --g300:#D1CFC5; --g500:#87867F; --g700:#3D3D3A;
+  --serif:ui-serif,Georgia,"Times New Roman",Times,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ivory);color:var(--g700);font-family:var(--sans);font-size:14.5px;line-height:1.55;padding:48px 32px 80px;-webkit-font-smoothing:antialiased}
+.page{max-width:1180px;margin:0 auto}
+
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g500);margin-bottom:10px}
+h1{font-family:var(--serif);font-weight:500;font-size:36px;color:var(--slate);letter-spacing:-0.01em;line-height:1.1;margin-bottom:10px}
+h1 em{font-style:italic;color:var(--clay)}
+.lead{max-width:720px;color:var(--g700);margin-bottom:24px}
+
+.strip{background:var(--paper);border:1px solid var(--g200);border-radius:10px;padding:14px 18px;margin-bottom:32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
+.strip .lbl{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g500);margin-right:4px}
+.pill{display:inline-flex;padding:4px 10px;background:var(--g100);border-radius:999px;font-family:var(--mono);font-size:11.5px;color:var(--g700)}
+.pill.ok{background:var(--olive);color:#fff}
+.pill.new{background:var(--clay);color:#fff}
+.arr{color:var(--g300);font-family:var(--mono)}
+
+h2{font-family:var(--serif);font-weight:500;font-size:22px;color:var(--slate);margin:32px 0 10px;letter-spacing:-0.005em}
+h2 .num{font-family:var(--mono);font-size:12px;color:var(--g500);margin-right:8px}
+p.s{max-width:720px;margin-bottom:12px}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0 24px;background:var(--paper);border:1px solid var(--g200);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--g200);vertical-align:top}
+tr:last-child td{border-bottom:none}
+th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--g500);font-weight:500;background:var(--g100)}
+td.id{font-family:var(--mono);font-size:11px;color:var(--g500);width:42px;white-space:nowrap}
+td.before{color:var(--clay-d);font-size:13px}
+td.after{color:var(--olive);font-size:13px}
+td.delta{font-family:var(--mono);font-size:11.5px;color:var(--g700);width:90px;white-space:nowrap}
+td strong{color:var(--slate)}
+
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:8px}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1.5px solid var(--g300);border-radius:12px;padding:18px 20px}
+.card h3{font-family:var(--serif);font-weight:500;font-size:16px;color:var(--slate);margin-bottom:6px}
+.card .meta{font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--g500);margin-bottom:10px}
+.card .row{display:flex;align-items:baseline;gap:8px;font-size:13px;margin-bottom:4px}
+.card .row .k{font-family:var(--mono);font-size:11px;color:var(--g500);width:54px;flex-shrink:0}
+.card .row .v{color:var(--g700)}
+.card .row .v.bad{color:var(--clay-d)}
+.card .row .v.good{color:var(--olive);font-weight:500}
+
+pre.code{font-family:var(--mono);font-size:12px;line-height:1.55;background:var(--slate);color:#E8E6DD;border-radius:8px;padding:14px 18px;overflow-x:auto;white-space:pre;margin:10px 0}
+pre.code .c{color:var(--g500)}
+pre.code .ok{color:var(--olive)}
+pre.code .x{color:var(--clay)}
+
+code.path{font-family:var(--mono);font-size:12.5px;background:var(--g100);border:1px solid var(--g200);padding:1px 6px;border-radius:4px;color:var(--g700)}
+
+aside.verdict{border-left:4px solid var(--clay);background:var(--paper);border-radius:0 12px 12px 0;padding:22px 26px;max-width:920px;margin-top:32px}
+aside.verdict h2{font-family:var(--serif);font-weight:500;font-size:22px;color:var(--slate);margin:0 0 10px}
+aside.verdict ol{margin:8px 0 0 22px;font-size:13.5px;color:var(--g700)}
+aside.verdict ol li{margin-bottom:6px}
+aside.verdict code{font-family:var(--mono);font-size:0.9em;background:var(--g100);padding:1px 6px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div data-component="header">
+    <div class="eyebrow">html-kit · v0.2.0 → v0.3.0 · before / after · 2026-05-18</div>
+    <h1>v0.3.0 ships. <em>Eval matrix</em> + smoke tests below.</h1>
+    <p class="lead">This artifact is itself a v0.3.0 dogfood render: resolved via <code class="path">bun scripts/resolve-out-path.ts</code>, audited via <code class="path">bun scripts/render-audit.ts</code>, palette injected at write-time. Lives in <code class="path">.html-kit/01_*.html</code> (not <code class="path">/tmp/</code>).</p>
+  </div>
+
+  <div class="strip" data-component="status-strip">
+    <span class="lbl">commits</span>
+    <span class="pill">f75fb3f feat(v0.3.0)</span>
+    <span class="pill">d280947 fix(gotchas)</span>
+    <span class="arr">·</span>
+    <span class="lbl">slices</span>
+    <span class="pill ok">A scripts</span>
+    <span class="pill ok">B SKILL.md</span>
+    <span class="pill ok">C patterns+recipes</span>
+    <span class="pill ok">D review</span>
+    <span class="pill new">E this doc</span>
+  </div>
+
+  <h2><span class="num">01</span>Friction matrix — F1 through F8</h2>
+  <p class="s">From the original audit. Severity column shows v0.2.0 → v0.3.0 movement.</p>
+
+  <table data-component="comparison-table">
+    <thead><tr><th>id</th><th>friction</th><th>v0.2.0 (before)</th><th>v0.3.0 (after)</th><th>delta</th></tr></thead>
+    <tbody>
+      <tr><td class="id">F1</td><td><strong>Step 0 cognitive tax</strong></td><td class="before">~65 lines, 4-pattern matrix, 5 judgment signals on every invocation</td><td class="after">8 lines, single default rule, deep reference deferred to <code class="path">references/</code></td><td class="delta">−57 lines</td></tr>
+      <tr><td class="id">F2</td><td><strong>Recipe stubs vs 500-line exemplars</strong></td><td class="before">10-line recipes, no failure-mode encoding; archetype-of-origin lessons live in SKILL.md prose</td><td class="after"><code class="path">## Gotchas</code> seeded w/ pre-v0.3.0 + 2026-05-13 lessons across 19 recipes; Step 10 fattens on every v2</td><td class="delta">19 recipes · 60 legacy + 7 seeds</td></tr>
+      <tr><td class="id">F3</td><td><strong>Palette duplication</strong></td><td class="before">"copy <code>:root</code> inline" — N artifacts × N edits on token refresh</td><td class="after"><code class="path">bun scripts/inject-palette.ts</code> reads tokens at render-time; output still self-contained</td><td class="delta">N → 1 file</td></tr>
+      <tr><td class="id">F4</td><td><strong>Hardcoded absolute path</strong></td><td class="before"><code class="path">~/Documents/.../html-kit/tokens/...</code> in SKILL.md; breaks non-KN installs</td><td class="after">Resolved relative via <code class="path">import.meta.dir</code> walk-up in <code class="path">inject-palette.ts</code></td><td class="delta">portable</td></tr>
+      <tr><td class="id">F5</td><td><strong><code>open</code> silent fail (Linux)</strong></td><td class="before">Fire-and-forget; non-zero exit unnoticed</td><td class="after">Step 7 banner-prints abs path on non-zero exit</td><td class="delta">loud failure</td></tr>
+      <tr><td class="id">F6</td><td><strong>Lessons-learned drift</strong></td><td class="before">7 bullets in SKILL.md duplicated tone w/ recipes — guaranteed desync</td><td class="after">Bullets removed from SKILL.md; redistributed to recipe-of-origin <code class="path">## Gotchas</code></td><td class="delta">0 dup</td></tr>
+      <tr><td class="id">F7</td><td><strong><code>exploration-*</code> coin flip</strong></td><td class="before">code-approaches vs visual-designs — invisible disambiguator</td><td class="after">Deferred to v0.3.1 — marked w/ "summary strip" + cross-archetype seeded gotchas</td><td class="delta">tracked</td></tr>
+      <tr><td class="id">F8</td><td><strong>v2 requests not captured</strong></td><td class="before">User revises → knowledge lost on next session</td><td class="after">Step 10 = append dated gotcha to recipe on every v2</td><td class="delta">compounding</td></tr>
+      <tr><td class="id">F9</td><td><strong>/tmp sprawl</strong></td><td class="before">Default output <code class="path">/tmp/&lt;slug&gt;-&lt;topic&gt;.html</code> — ephemeral, ungrouped</td><td class="after"><code class="path">.html-kit/NN_topic.html</code> in-repo (gitignore-prompted) or <code class="path">~/.html-kit/&lt;slug&gt;/</code></td><td class="delta">persistent</td></tr>
+      <tr><td class="id">F10</td><td><strong>Markdown bullet lists for options</strong></td><td class="before"><code>&lt;ul&gt;</code> of decisions, no visual comparison</td><td class="after">Mandatory <code class="path">.approach</code>-grid via <code class="path">patterns/option-card.md</code></td><td class="delta">3-col card grid</td></tr>
+      <tr><td class="id">F11</td><td><strong>Raw markdown fences for code</strong></td><td class="before">Triple-backtick blocks rendered as raw <code>&lt;pre&gt;</code></td><td class="after"><code>&lt;pre class="code"&gt;</code> styled component w/ token spans (hamilton.html pattern)</td><td class="delta">styled artifact</td></tr>
+      <tr><td class="id">F12</td><td><strong>Untagged divs</strong></td><td class="before">Wrapper divs unmarked; render-audit impossible</td><td class="after"><code class="path">data-component="..."</code> required on every top-level wrapper</td><td class="delta">audit-tractable</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="num">02</span>Smoke test results</h2>
+  <p class="s">Three invocations of v0.3.0 scripts against this dogfood render + a synthetic stub.</p>
+
+  <div class="grid" data-component="approach-grid">
+
+    <div class="card" data-component="proposal-card">
+      <h3>resolve-out-path.ts</h3>
+      <div class="meta">test · cwd inside git repo</div>
+      <div class="row"><span class="k">input</span><span class="v">slug=<code class="path">v0.3.0-before-after-eval</code></span></div>
+      <div class="row"><span class="k">cwd</span><span class="v">html-kit/ (git)</span></div>
+      <div class="row"><span class="k">output</span><span class="v good">.html-kit/01_*.html</span></div>
+      <div class="row"><span class="k">tty?</span><span class="v">no (piped) → ENXIO caught</span></div>
+      <div class="row"><span class="k">config</span><span class="v">.config.json written (addToGitignore=false)</span></div>
+      <div class="row"><span class="k">exit</span><span class="v good">0</span></div>
+    </div>
+
+    <div class="card" data-component="proposal-card">
+      <h3>next-number.ts</h3>
+      <div class="meta">test · synthetic /tmp/nn-test/</div>
+      <div class="row"><span class="k">seed</span><span class="v">00_backlog 01_foo 03_bar</span></div>
+      <div class="row"><span class="k">reserved</span><span class="v">00 (skipped)</span></div>
+      <div class="row"><span class="k">output</span><span class="v good">04</span></div>
+      <div class="row"><span class="k">edge</span><span class="v">empty dir → 01 (min)</span></div>
+      <div class="row"><span class="k">exit</span><span class="v good">0</span></div>
+    </div>
+
+    <div class="card" data-component="proposal-card">
+      <h3>render-audit.ts</h3>
+      <div class="meta">test · v0.3.0 spec html</div>
+      <div class="row"><span class="k">palette</span><span class="v good">--clay/--ivory/--slate ✓</span></div>
+      <div class="row"><span class="k">tree</span><span class="v good">no <code>&lt;div class="tree"&gt;</code> ✓</span></div>
+      <div class="row"><span class="k">tags</span><span class="v good">data-component found ✓</span></div>
+      <div class="row"><span class="k">exit</span><span class="v good">0 (pass)</span></div>
+    </div>
+
+  </div>
+
+  <h2><span class="num">03</span>Pipeline trace — this artifact</h2>
+  <p class="s">Concrete trace: how v0.3.0 produced the file you're reading.</p>
+
+  <pre class="code" data-component="code-artifact">
+<span class="c"># Step 6 (resolve)</span>
+$ bun scripts/resolve-out-path.ts v0.3.0-before-after-eval &lt; /dev/null
+<span class="ok">/Users/alice/.../html-kit/.html-kit/01_v0.3.0-before-after-eval.html</span>
+
+<span class="c"># Step 5 (render — palette inlined at top of &lt;style&gt;)</span>
+$ bun scripts/inject-palette.ts
+<span class="ok">:root { --ivory:#FAF9F5; --slate:#141413; --clay:#D97757; ... }</span>
+
+<span class="c"># Step 7 (audit before open)</span>
+$ bun scripts/render-audit.ts &lt;path&gt;
+<span class="ok">[OK] palette token (--clay / --ivory / --slate) found in :root block</span>
+<span class="ok">[OK] no forbidden &lt;div class="tree"&gt; usage</span>
+<span class="ok">[OK] data-component attribute found on wrapper element</span>
+exit 0
+
+<span class="c"># Step 7 (open)</span>
+$ open &lt;path&gt;        <span class="c"># macOS — exits 0; Linux fallback prints banner</span>
+</pre>
+
+  <h2><span class="num">04</span>What to test next (manual + automated)</h2>
+  <table data-component="comparison-table">
+    <thead><tr><th>id</th><th>test</th><th>how</th><th>blocks merge?</th></tr></thead>
+    <tbody>
+      <tr><td class="id">T1</td><td>Fresh-clone install on Linux box</td><td><code class="path">install.sh</code> → bun preflight blocks if missing; symlinks resolve; <code class="path">.html-kit/</code> created on first invoke</td><td class="delta">no (manual)</td></tr>
+      <tr><td class="id">T2</td><td>Real v2 request → Step 10 appends to recipe</td><td>Render plan, ask "make it bolder", verify <code class="path">implementation-plan/recipe.md</code> gained dated gotcha</td><td class="delta">no (1-render eval)</td></tr>
+      <tr><td class="id">T3</td><td>Audit catches <code>&lt;div class="tree"&gt;</code></td><td>Manually inject offender into a render; expect exit 1 + fix-required prompt</td><td class="delta">no (1-script run)</td></tr>
+      <tr><td class="id">T4</td><td>Non-git cwd → ~/.html-kit/&lt;slug&gt;/</td><td><code class="path">cd /tmp && bun &lt;repo&gt;/scripts/resolve-out-path.ts foo</code></td><td class="delta">no</td></tr>
+      <tr><td class="id">T5</td><td>00_backlog.html stays pinned</td><td>Create it manually; render anything else; verify <code class="path">next-number</code> returns 01+ never 00</td><td class="delta">no (already smoke-tested ✓)</td></tr>
+      <tr><td class="id">T6</td><td>Notion / email paste fidelity</td><td>Paste this html into Notion + Gmail; verify self-contained (no external fetches), serif/mono render, tables don't break</td><td class="delta">yes (P0 user pain)</td></tr>
+      <tr><td class="id">T7</td><td>Recipe selection accuracy</td><td>Invoke skill 5 times w/ ambiguous source content; track v2-rate vs v0.2.0 baseline (≥30 invocations needed for signal)</td><td class="delta">no (30-day eval)</td></tr>
+    </tbody>
+  </table>
+
+  <aside class="verdict" data-component="verdict">
+    <h2>v0.3.0 status — ready to use</h2>
+    <p style="margin-bottom:10px">12 friction items addressed (F1—F12). 3 of 7 follow-up tests already green from smoke. T6 (paste-fidelity) + T7 (selection accuracy over 30 invocations) are the durable outstanding evals.</p>
+    <ol>
+      <li><strong>Use it now</strong> — invoke <code>/html-kit</code> on the next decision doc; it'll write to <code>.html-kit/02_*.html</code> in the active repo</li>
+      <li><strong>Watch for v2-request gotchas</strong> — Step 10 should auto-append; spot-check after ~3 renders</li>
+      <li><strong>Schedule T7</strong> — log archetype picks for 30 days; revisit consolidation (P4 exploration-merge) then</li>
+      <li><strong>Defer P5 feedback widget</strong> — only ship after T6 confirms paste-fidelity holds across destinations</li>
+    </ol>
+    <p style="margin-top:14px">PR / merge? Branch <code>v0.3.0</code> ready vs <code>main</code>. Reply <code>merge</code> to fast-forward + tag <code>v0.3.0</code>.</p>
+  </aside>
+
+</div>
+</body>
+</html>

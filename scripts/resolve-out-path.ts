@@ -37,6 +37,18 @@ async function main() {
   if (gitRoot) {
     const kitDir = join(gitRoot, ".html-kit");
     mkdirSync(kitDir, { recursive: true });
+    mkdirSync(join(kitDir, "_archive"), { recursive: true });
+
+    const gitignorePath = join(gitRoot, ".gitignore");
+    const ensureGitignoreLine = (line: string) => {
+      const existing = existsSync(gitignorePath) ? readFileSync(gitignorePath, "utf8") : "";
+      if (!existing.split("\n").some(l => l.trim() === line)) {
+        appendFileSync(gitignorePath, (existing.endsWith("\n") || existing === "" ? "" : "\n") + line + "\n");
+      }
+    };
+
+    // _archive/ is always gitignored — scratch space regardless of .html-kit/ commit policy.
+    ensureGitignoreLine(".html-kit/_archive/");
 
     const configPath = join(kitDir, ".config.json");
     if (!existsSync(configPath)) {
@@ -55,11 +67,7 @@ async function main() {
       }
       writeFileSync(configPath, JSON.stringify({ addToGitignore }, null, 2) + "\n");
       if (addToGitignore) {
-        const gitignorePath = join(gitRoot, ".gitignore");
-        const existing = existsSync(gitignorePath) ? readFileSync(gitignorePath, "utf8") : "";
-        if (!existing.split("\n").some(l => l.trim() === ".html-kit/")) {
-          appendFileSync(gitignorePath, (existing.endsWith("\n") || existing === "" ? "" : "\n") + ".html-kit/\n");
-        }
+        ensureGitignoreLine(".html-kit/");
       }
     }
 
