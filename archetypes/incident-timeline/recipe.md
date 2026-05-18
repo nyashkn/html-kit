@@ -4,16 +4,14 @@
 
 **Data shape:** incident id/title, severity, duration, summary, ordered events (timestamp + actor + description), root cause section, action items w/ owners.
 
-**Gotchas:**
-- Use a vertical timeline rail (left edge dots + lines) — readers expect chronology to look like time.
-- Long log excerpts: wrap in `<details>` so they don't dominate the page.
-- Action items at the BOTTOM with checkbox affordance and owners — that's the artifact's lasting value.
-
 ## Patterns
 - `patterns/swimlane-flow.md` — multi-actor lanes × stage columns w/ failure-path edges.
 
 ## Gotchas
 
+- (legacy): Use a vertical timeline rail (left edge dots + lines) — readers expect chronology to look like time.
+- (legacy): Long log excerpts: wrap in `<details>` so they don't dominate the page.
+- (legacy): Action items at the BOTTOM with checkbox affordance and owners — that's the artifact's lasting value.
 - 2026-05-13: artifacts with 6+ sections need sticky right-rail TOC (≥1280px) w/ IntersectionObserver active-section marking. Hide rail under 1280px, fall back to top pill nav.
 - 2026-05-13: when content has linear progression, render TLDR strip as a single line of pills with arrows between (A → B → C).
 - 2026-05-13: use <details class="deep"> for genuinely deep optional detail only (log excerpts, edge cases). Never wrap the main narrative in accordions — readers won't open them.

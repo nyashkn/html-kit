@@ -9,18 +9,16 @@
 
 **Data shape:** subject name, intuition paragraph, optional interactive demo OR ordered list of layers (for layered flavour), comparison vs alternatives or sibling features, glossary or file-reference list.
 
-**Gotchas:**
-- Pick the flavour by content shape: mentions specific files / endpoints → concrete. Generic principles → abstract. Sequential layers w/ flow direction → layered.
-- The interactive demo (abstract), annotated walkthrough (concrete), or band stack (layered) is the centerpiece — invest the visual budget there.
-- Hover-linked glossary or file references inline, not a footer dump.
-- Comparison table needs a "best for" column; concept-vs-concept tables are useless without one.
-- Layered flavour: dual-axis rails carry the narrative — don't bury them in CSS, they're the point. Caption below decodes color = down-arrow direction (e.g. olive=intent descends, clay=data ascends).
-
 ## Patterns
 - `patterns/swimlane-flow.md` — multi-actor lanes × stage columns w/ failure-path edges.
 
 ## Gotchas
 
+- (legacy): Pick the flavour by content shape: mentions specific files / endpoints → concrete. Generic principles → abstract. Sequential layers w/ flow direction → layered.
+- (legacy): The interactive demo (abstract), annotated walkthrough (concrete), or band stack (layered) is the centerpiece — invest the visual budget there.
+- (legacy): Hover-linked glossary or file references inline, not a footer dump.
+- (legacy): Comparison table needs a "best for" column; concept-vs-concept tables are useless without one.
+- (legacy): Layered flavour: dual-axis rails carry the narrative — don't bury them in CSS, they're the point. Caption below decodes color = down-arrow direction (e.g. olive=intent descends, clay=data ascends).
 - 2026-05-13: artifacts with 6+ sections need sticky right-rail TOC (≥1280px) w/ IntersectionObserver active-section marking. Hide rail under 1280px, fall back to top pill nav.
 - 2026-05-13: use <details class="deep"> for genuinely deep optional detail only (log excerpts, edge cases). Never wrap the main narrative in accordions — readers won't open them.
 - 2026-05-13: artifacts must be fully self-contained. Inline <style>, inline SVG, inline JS. No CDN links, no @import, no external fonts (system stack is the brand).
