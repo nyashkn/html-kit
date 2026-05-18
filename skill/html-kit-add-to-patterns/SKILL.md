@@ -7,8 +7,12 @@ description: Extract a reusable cross-archetype pattern (CSS + HTML fragment + w
 
 Companion to the `html-kit` router skill. Promotes a reusable visual /
 interaction component from a one-off render into a documented pattern at
-`~/code/html-kit/patterns/<slug>.md`,
+`<html-kit-repo>/patterns/<slug>.md` (resolve repo root the same way the
+router skill does — via `import.meta.dir` walk-up or `HTML_KIT_REPO` env),
 then cross-links from any archetype recipe that should reference it.
+
+Source artifacts now live in `<project>/.html-kit/NN_*.html` (in-repo) or
+`~/.html-kit/<project-slug>/NN_*.html` (no-git fallback), not `/tmp/`.
 
 ## When to invoke
 
@@ -28,6 +32,9 @@ Patterns are for cross-cutting things.
    - HTML fragment (clean copy, generic class names — no `id="s09"` etc.)
    - CSS rules required (use `var(--token)` for palette refs, never hex)
    - Token dependencies (which `tokens/anthropic-palette.css` vars it needs)
+   - `data-component="<name>"` attribute on the wrapper element — every
+     pattern must declare its component name so render-audit (v0.3.0+) can
+     verify it landed.
 3. **Pick a slug.** Kebab-case, descriptive, noun-phrase. `decision-box`,
    `dual-axis-rails`, `hover-highlight-bands`, `tldr-flow-strip`. Check
    `patterns/` first — don't duplicate.
@@ -46,7 +53,7 @@ Patterns are for cross-cutting things.
 
    ## Exemplar fragment
    ```html
-   <!-- minimal HTML to copy-paste -->
+   <!-- minimal HTML to copy-paste, wrapper carries data-component="<name>" -->
    ```
 
    ## CSS
@@ -66,13 +73,21 @@ Patterns are for cross-cutting things.
    ## Patterns
    - `patterns/decision-box.md` — for the closing verdict section
    ```
-6. **Update SKILL.md (router) lessons-learned** if the pattern represents a
-   hard rule (not just an option). E.g. "always end decision artifacts w/
-   `decision-box`" is a hard rule. "Layered flavour can use `dual-axis-rails`"
-   is just an option — recipe link is enough.
-7. **Commit.** `feat(patterns): promote <slug> from <source-artifact>`. Do NOT
+6. **If pattern is a hard rule, append to recipe `## Gotchas`** in every
+   archetype where it's mandatory. Format:
+   ```
+   - YYYY-MM-DD: decision-bearing artifacts MUST end with patterns/decision-box.md (hard rule, not optional).
+   ```
+   Do NOT touch the router `SKILL.md` — the lessons-learned section was
+   removed in v0.3.0. Rules now live in recipes.
+7. **Validate via render-audit.** Re-run `bun scripts/render-audit.ts
+   <source-artifact-path>` to confirm the source still passes after any
+   touch-ups. If you edited the source's hex → `var(--token)` while
+   extracting, write the edited copy to `.html-kit/_archive/` (gitignored)
+   instead of mutating the original.
+8. **Commit.** `feat(patterns): promote <slug> from <source-artifact>`. Do NOT
    tag — patterns accumulate continuously, not on version cadence.
-8. **Report back.** One line: `pattern saved → patterns/<slug>.md` + the
+9. **Report back.** One line: `pattern saved → patterns/<slug>.md` + the
    archetypes you cross-linked. No prose summary.
 
 ## Inputs the user (or main agent) should provide
@@ -92,4 +107,7 @@ If anything required is missing, ask via `AskUserQuestion` (single question).
 - **Don't over-promote.** A pattern needs ≥2 plausible consumers. If you can't
   name two archetypes that'd use it, skip — premature reuse.
 - **Ancestry is not optional.** Future-you needs to know where this came from
-  and what user feedback validated it.
+  and what user feedback validated it. Reference the `.html-kit/NN_*.html`
+  source path + session date + the user-feedback line that prompted promotion.
+- **data-component is mandatory.** Wrapper element in the exemplar fragment
+  must carry `data-component="<name>"`. Render-audit warns when it's missing.
