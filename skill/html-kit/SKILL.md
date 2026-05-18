@@ -12,56 +12,15 @@ inline JS — no external assets).
 
 ## Workflow
 
-### Step 0 — Pick render pattern
+### Step 0 — Pattern selection
 
-Four patterns. Pick by task signature, not reflex. Full rationale (council
-deliberation, anti-patterns, when to revisit) in
-`references/delegation-rationale.md` — read only when an unusual case
-arises.
+Default to **Pattern A** (inline render in main thread). Deviate ONLY when:
+- main context >70% used → Pattern C (Opus sub-agent)
+- output projected >1500 lines → Pattern C
+- already running ≥2 sub-agents this turn → Pattern D (agent team)
+- Sonnet sub-agent (Pattern B) is almost always wrong — see `references/delegation-rationale.md` before choosing it.
 
-| Pattern | Model | Context handoff | Use when |
-|---|---|---|---|
-| **A. Inline (default)** | Opus (main) | None — main has it | User actively iterating · output <500 lines · no parallel work waiting · taste shaping in-thread |
-| **B. Sonnet sub-agent** | Sonnet | Brief.md (lossy) | Narrow: ALL of (pre-spec'd output, pre-shaped data, one-shot, reference render exists) |
-| **C. Opus sub-agent** | Opus (peer) | Verbose brief w/ full convo excerpt + reference render path | Main has parallel work · context budget tight (>70%) · output >500 lines · taste matters but main blocked |
-| **D. Agent team** | Opus × N | Shared task list + msg-passing | Render is synthesis step in a pipeline already running sub-agents (`/search:deep`, `/council`) · multi-artifact set (3+ related HTML files) |
-
-**Hard signals:**
-- Brief longer than the diff from inline render → A.
-- Would need to paste conversation transcript verbatim → A or C (never B).
-- Already running ≥2 sub-agents in this turn → D (don't fresh-delegate).
-- Output >1500 lines OR main near compaction → C minimum, D if pipeline.
-
-**Never Haiku** for HTML >300 lines (loses global coherence — callouts drift,
-emphasis flattens). Haiku acceptable only for fully-deterministic <500 line
-templating w/ no taste calls.
-
-**Pipeline integration hooks:**
-- `/search:deep` synthesis → spawn render-teammate w/ access to research-agent
-  outputs (D, not C).
-- `/council` synthesis → render-teammate sees all persona outputs directly via
-  shared task list.
-- Multi-artifact deliveries → 1 main + N render-teammates parallel.
-
-**Delegation skeleton (B/C):**
-1. Brief at `/tmp/render-brief-<topic>.md`:
-   - Source content **verbatim** (summarization kills intent for B/C)
-   - Archetype slug + reason
-   - Output path
-   - Reference render path (the prior aesthetic anchor)
-   - User constraints (palette, voice, sections to emphasize)
-2. Spawn `general-purpose` sub-agent. `model: opus` for C, `model: sonnet` for B:
-   > "Read /tmp/render-brief-<topic>.md. Read the html-kit SKILL at
-   > ~/.claude/skills/html-kit/SKILL.md. Follow Steps 2-9. Report the
-   > absolute output path. Nothing else."
-3. `run_in_background: true` only if user signaled bg or main has parallel
-   work. Default foreground.
-4. Main runs `open <path>` and Step 9 follow-up.
-
-**Agent team skeleton (D):** see Claude Code agent-teams docs
-(https://code.claude.com/docs/en/agent-teams). Give the render-teammate
-access to upstream sub-agent outputs via shared task list, not a copy-paste
-brief.
+Full deliberation, edge cases, and anti-patterns: `references/delegation-rationale.md`.
 
 ### Inline workflow (Steps 1-9)
 
@@ -79,10 +38,33 @@ brief.
    Anthropic palette (`--ivory`, `--clay`, `--slate`, `--oat`, `--olive`,
    `--g100..g700`, serif display + sans body + mono accent). Keep
    self-contained.
-6. **Write to user-specified path** or default to `/tmp/<slug>-<topic>.html`
-   where `<topic>` is a kebab-case 2-4 word summary of the source content.
-7. **Auto-open immediately.** Run `open <absolute-path>` via Bash right after
-   the Write. Don't ask permission, don't wait — user wants to see it now.
+
+   Additional rendering rules:
+   - Every top-level wrapper `<div>` carries `data-component="..."` where the
+     value is one of: `header | status-strip | approach-grid | proposal-card |
+     code-artifact | verdict | toc | deep-detail`. Use new component names if
+     needed but be deliberate.
+   - Decision-bearing artifacts MUST use option-card grid (see
+     `patterns/option-card.md`), not `<ul>` markdown lists.
+   - Code shown inside an artifact uses styled `<pre class="code">` component
+     (dark bg, mono, syntax-token spans), NOT raw markdown fences. Reference:
+     hamilton.html exemplar pattern.
+   - Prefer 1-pager compact. Use `<details class="deep">` accordions ONLY for
+     genuinely deep optional detail (long log excerpts, edge-case tables,
+     references). Never wrap main narrative in accordions.
+
+6. **Resolve output path.** Run `bun scripts/resolve-out-path.ts <topic-slug>`
+   from the html-kit repo root. The script returns an absolute path: in-repo
+   `.html-kit/NN_topic.html` if cwd is inside a git repo, else
+   `~/.html-kit/<project-slug>/NN_topic.html`. On first use per repo, the
+   script prompts whether to add `.html-kit/` to `.gitignore`. Honor
+   user-specified path verbatim if explicitly given. `/tmp/` is no longer the
+   default.
+7. **Audit + auto-open.** Run `bun scripts/render-audit.ts <abs-path>` before
+   opening. Fails on missing palette tokens or `<div class="tree">`. If audit
+   fails: fix and re-write. If audit passes: run `open <abs-path>`. If `open`
+   exits non-zero (Linux/headless), print the absolute path in a 3-line banner
+   and stop.
 8. **Report the path back as `open <path>`** (literal `open ` prefix). Single
    line, no prose summary — the artifact speaks for itself. The `open ` prefix
    lets the user copy-paste straight into another terminal session.
@@ -92,6 +74,13 @@ brief.
    without retyping. See `~/.claude/rules/ask-structured.md` for schema. Skip
    only if the artifact is purely informational (status report, explainer,
    slide deck) with nothing to decide.
+10. **On revision request, fatten the recipe.** If the user asks for a v2 /
+    iteration / "make it more X", append one line to the chosen archetype's
+    recipe.md under `## Gotchas`:
+
+    - YYYY-MM-DD: picked <archetype>, user asked for v2 because <reason>. Fix: <what should have been different>.
+
+    Recipes gain field knowledge from every revision. Selection accuracy compounds over use.
 
 ## Archetype selection cheatsheet
 
@@ -120,36 +109,14 @@ template — it accommodates TLDR strip, sections, callouts, tables, sticky TOC.
 
 ## Lessons learned (read before rendering)
 
-These come from a v2 incident on `hamilton-restate-plan` where v1 looked
-flat and dense:
-
-- **ASCII trees: `<pre class="tree">` only.** Never `<div>`. Style with
-  `font-family: var(--mono); white-space: pre; overflow-x: auto;`. A `<div>`
-  collapses whitespace and the tree falls apart on narrow screens.
-- **Sticky right-rail TOC ≥1280px** for any artifact with 6+ sections. Use
-  `IntersectionObserver` to mark the active section as the user scrolls. Hide
-  rail under 1280px and fall back to a top pill nav.
-- **Summary strip at top** with a "jump to verdict / decision / recommendation"
-  pill anchored to the most action-relevant section. Helps skimmers.
-- **TLDR strip with inline flow `A → B → C`** when the content has linear
-  progression (plans, incidents, pipelines). Renders as a single line of
-  pills with arrows between.
-- **Selective accordions only.** Use `<details>` for genuinely deep / optional
-  detail (long log excerpts, full risk tables). Do NOT collapse the main
-  narrative — readers won't open them.
-- **Self-contained always.** Inline CSS in `<style>`, inline SVG, inline JS.
-  No CDN links, no external fonts (system stack is the brand).
-- **Keep the exemplars verbatim.** When you read one, don't propose edits to
-  it — it's the reference. Adapt by rendering a NEW file.
+Per-archetype gotchas live in each recipe's "## Gotchas" section.
 
 ## Tokens
 
-Reference palette + base typography lives in the html-kit project repo at
-`tokens/anthropic-palette.css` (path relative to project root —
-`~/code/html-kit/tokens/anthropic-palette.css`
-when invoked from elsewhere). Don't `@import` it — copy the `:root { ... }`
-block inline at the top of your `<style>` tag. This keeps each artifact
-self-contained.
+Palette + base typography source: `tokens/anthropic-palette.css`. At render
+time call `bun scripts/inject-palette.ts` to get the `:root { ... }` block to
+paste as the first `<style>` block in your render. Keeps artifacts
+self-contained while making token edits a single-file change.
 
 ## Patterns
 
@@ -159,8 +126,9 @@ which apply, then inline the fragment + CSS into your render. Never `@import`
 or external-link.
 
 Current patterns:
-- `patterns/decision-box.md` — closing verdict section w/ ordered list + CTA.
-  Use at the end of any decision-bearing artifact.
+- `patterns/decision-box.md` — closing verdict + ordered list + CTA
+- `patterns/option-card.md` — 3-column option grid for decision-bearing artifacts
+- `patterns/swimlane-flow.md` — multi-actor sequential flow
 
 To promote a new pattern from a finished render, invoke
 `/html-kit:add-to-patterns` (companion sub-skill).
@@ -168,5 +136,5 @@ To promote a new pattern from a finished render, invoke
 ## Output discipline
 
 - Single `.html` file. No supporting CSS / JS / image files.
-- Default path `/tmp/<slug>-<topic>.html` if user didn't specify.
+- Default path resolved via `bun scripts/resolve-out-path.ts` — not `/tmp/`.
 - After writing, report the absolute path in one line. Nothing else.
