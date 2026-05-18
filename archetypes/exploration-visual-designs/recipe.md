@@ -4,13 +4,11 @@
 
 **Data shape:** N design panes, each a fully rendered mini-mockup (hero, list, card, etc.) plus 1-2 line caption naming the trade-off it explores.
 
-**Gotchas:**
-- Each pane must render the *real* thing, not a wireframe — the point is to react to live pixels.
-- Constrain each pane to similar bounding box so eye can compare.
-- Avoid labeling "Option A / B / C" generically; give each direction a name.
-
 ## Gotchas
 
+- (legacy): Each pane must render the *real* thing, not a wireframe — the point is to react to live pixels.
+- (legacy): Constrain each pane to similar bounding box so eye can compare.
+- (legacy): Avoid labeling "Option A / B / C" generically; give each direction a name.
 - 2026-05-13: include a summary strip at top with a jump-to-verdict/decision pill anchored to the most action-relevant section. Helps skimmers.
 - 2026-05-13: use <details class="deep"> for genuinely deep optional detail only (log excerpts, edge cases). Never wrap the main narrative in accordions — readers won't open them.
 - 2026-05-13: artifacts must be fully self-contained. Inline <style>, inline SVG, inline JS. No CDN links, no @import, no external fonts (system stack is the brand).

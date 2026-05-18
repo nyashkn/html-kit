@@ -4,13 +4,11 @@
 
 **Data shape:** the element being animated, the property/properties (transform, opacity, etc.), default duration + easing, range bounds for sliders.
 
-**Gotchas:**
-- Inline JS for the slider → CSS-var binding. Keep it tiny.
-- Show the easing curve as inline SVG so users see the shape, not just the name.
-- Provide a "copy CSS" button that emits the final `transition:` string.
-
 ## Gotchas
 
+- (legacy): Inline JS for the slider → CSS-var binding. Keep it tiny.
+- (legacy): Show the easing curve as inline SVG so users see the shape, not just the name.
+- (legacy): Provide a "copy CSS" button that emits the final `transition:` string.
 - 2026-05-13: use <details class="deep"> for genuinely deep optional detail only (log excerpts, edge cases). Never wrap the main narrative in accordions — readers won't open them.
 - 2026-05-13: artifacts must be fully self-contained. Inline <style>, inline SVG, inline JS. No CDN links, no @import, no external fonts (system stack is the brand).
 - 2026-05-13: never propose edits to exemplar.html — it's the reference. Adapt by rendering a NEW file.

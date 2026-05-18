@@ -40,13 +40,19 @@ async function main() {
 
     const configPath = join(kitDir, ".config.json");
     if (!existsSync(configPath)) {
-      process.stderr.write("Add .html-kit/ to .gitignore? [y/N] ");
-      const buf = Buffer.alloc(4);
-      const fd = openSync("/dev/tty", "r");
-      readSync(fd, buf, 0, buf.length, null);
-      closeSync(fd);
-      const answer = buf.toString().trim().toLowerCase();
-      const addToGitignore = answer === "y" || answer === "yes";
+      let addToGitignore = false;
+      try {
+        process.stderr.write("Add .html-kit/ to .gitignore? [y/N] ");
+        const buf = Buffer.alloc(4);
+        const fd = openSync("/dev/tty", "r");
+        readSync(fd, buf, 0, buf.length, null);
+        closeSync(fd);
+        const answer = buf.toString().trim().toLowerCase();
+        addToGitignore = answer === "y" || answer === "yes";
+      } catch {
+        // Non-TTY context (CI, piped input, sub-agent) — default to false, write config silently.
+        addToGitignore = false;
+      }
       writeFileSync(configPath, JSON.stringify({ addToGitignore }, null, 2) + "\n");
       if (addToGitignore) {
         const gitignorePath = join(gitRoot, ".gitignore");

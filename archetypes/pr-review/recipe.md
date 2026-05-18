@@ -4,13 +4,11 @@
 
 **Data shape:** PR metadata (title, num, author), summary verdict, list of files w/ hunks, per-hunk comments tagged severity (nit/suggest/block), top-level summary table.
 
-**Gotchas:**
-- Keep diff hunks readable on narrow screens — don't fix-width to terminal columns.
-- Severity color: olive=nit, clay=suggest, rose=block. Stay consistent.
-- Give a verdict pill (approve / request-changes / comment) at top; readers skim for it.
-
 ## Gotchas
 
+- (legacy): Keep diff hunks readable on narrow screens — don't fix-width to terminal columns.
+- (legacy): Severity color: olive=nit, clay=suggest, rose=block. Stay consistent.
+- (legacy): Give a verdict pill (approve / request-changes / comment) at top; readers skim for it.
 - 2026-05-13: artifacts with 6+ sections need sticky right-rail TOC (≥1280px) w/ IntersectionObserver active-section marking. Hide rail under 1280px, fall back to top pill nav.
 - 2026-05-13: include a summary strip at top with a jump-to-verdict/decision pill anchored to the most action-relevant section. Helps skimmers.
 - 2026-05-13: use <details class="deep"> for genuinely deep optional detail only (log excerpts, edge cases). Never wrap the main narrative in accordions — readers won't open them.

@@ -4,17 +4,15 @@
 
 **Data shape:** plan title, summary/verdict, milestones (date + name + scope), data-flow diagram (SVG boxes/arrows), risk table (risk + likelihood + mitigation), open questions.
 
-**Gotchas:**
-- Sticky right-rail TOC ≥1280px with IntersectionObserver active-state — plans get long.
-- Summary strip at top with jump-to-verdict pill.
-- ASCII trees (file structure, dependency graph) MUST be `<pre class="tree">` not `<div>`.
-- TLDR strip `Phase 1 → Phase 2 → Phase 3` if linear; skip if not.
-
 ## Patterns
 - `patterns/decision-box.md` — close the plan with a verdict box (`patterns/decision-box.md`). Anchor the summary-strip jump-pill to its `id`.
 
 ## Gotchas
 
+- (legacy): Sticky right-rail TOC ≥1280px with IntersectionObserver active-state — plans get long.
+- (legacy): Summary strip at top with jump-to-verdict pill.
+- (legacy): ASCII trees (file structure, dependency graph) MUST be `<pre class="tree">` not `<div>`.
+- (legacy): TLDR strip `Phase 1 → Phase 2 → Phase 3` if linear; skip if not.
 - 2026-05-13: pre.tree must be <pre>, not <div>. <div> collapses whitespace and breaks tree on narrow screens.
 - 2026-05-13: artifacts with 6+ sections need sticky right-rail TOC (≥1280px) w/ IntersectionObserver active-section marking. Hide rail under 1280px, fall back to top pill nav.
 - 2026-05-13: include a summary strip at top with a jump-to-verdict/decision pill anchored to the most action-relevant section. Helps skimmers.
