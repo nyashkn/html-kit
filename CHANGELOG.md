@@ -7,6 +7,41 @@ are pinned in `package.json` / skill manifests; the heading dates use ISO-8601.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-05-19
+
+Polish on top of v0.4.0 — modal skin matches the rest of html-kit, and a
+companion skill drains agent-targeted annotations inline.
+
+### Added
+
+- **Pagefind modal Anthropic skin** (`assets/pagefind-overrides.css`) — a
+  CSS overlay loaded immediately after `pagefind-component-ui.css`. Targets
+  the `--pf-*` custom-property surface plus the `.pf-*` class names to swap
+  in ivory background, serif modal heading, mono eyebrow, clay focus ring,
+  paper close button, and ticket-styled result cards. Inherits palette vars
+  from the host page via `var(--clay, …)` fallbacks so it degrades cleanly
+  off-kit.
+- **`/html-kit-drain` skill** (`skill/html-kit-drain/SKILL.md`) — Claude
+  Code skill that drains pending annotations for the artifact in current
+  conversation focus, advances the cursor, and acts on the rollup inline.
+  Auto-discovered + symlinked by `install.sh`.
+
+### Changed
+
+- `scripts/html-kit-daemon.ts` — serves `/pagefind-overrides.css` from
+  `assets/`, and `injectOverlay` now emits the overrides `<link>` AFTER
+  `pagefind-component-ui.css` so cascade order is correct.
+- `scripts/build-index.ts` — head injection adds the overrides `<link>`
+  AFTER `pagefind-component-ui.css`, with a regex repair branch for
+  templates that already shipped the component CSS.
+
+### Notes
+
+- `tsconfig.json` (already on disk since v0.3.0 with `types: ["bun"]`)
+  satisfies `bunx tsc --noEmit` — the earlier LSP "errors" were stale
+  diagnostics from before `bun install` populated `node_modules/@types/*`.
+  Re-running the type check confirms a clean exit.
+
 ## [0.4.0] - 2026-05-19
 
 Singleton daemon, central index, and human↔agent annotation loop.
@@ -98,7 +133,8 @@ Singleton daemon, central index, and human↔agent annotation loop.
 
 - `swimlane-flow` pattern promoted from `access-onboarding-journey`.
 
-[Unreleased]: https://github.com/nyashkn/html-kit/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/nyashkn/html-kit/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/nyashkn/html-kit/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/nyashkn/html-kit/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/nyashkn/html-kit/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/nyashkn/html-kit/compare/v0.3.0...v0.3.1

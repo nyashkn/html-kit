@@ -16,6 +16,7 @@ const REPOS_FILE = join(DAEMON_DIR, "repos.json");
 const INDEX_HTML = join(DAEMON_DIR, "index.html");
 const PAGEFIND_DIR = join(DAEMON_DIR, "pagefind");
 const PATTERN_FILE = join(import.meta.dir, "..", "patterns", "annotation-strip.md");
+const OVERRIDES_FILE = join(import.meta.dir, "..", "assets", "pagefind-overrides.css");
 
 type ReposMap = Record<string, string>; // slug -> absolute artifact dir
 
@@ -89,6 +90,7 @@ function isSafePath(target: string, repos: ReposMap): boolean {
 function injectOverlay(html: string): string {
   const headExtras =
     `<link rel="stylesheet" href="/pagefind/pagefind-component-ui.css">\n` +
+    `<link rel="stylesheet" href="/pagefind-overrides.css">\n` +
     `<script src="/pagefind/pagefind-component-ui.js" type="module"></script>\n` +
     `<script src="/annotation-strip.js" defer></script>\n`;
   const bodyExtras = `<pagefind-config bundle-path="/pagefind/"></pagefind-config><pagefind-modal-trigger compact></pagefind-modal-trigger><pagefind-modal></pagefind-modal>\n`;
@@ -218,6 +220,23 @@ async function handle(req: Request): Promise<Response> {
     return new Response(loadAnnotationStrip(), {
       status: 200,
       headers: { "content-type": "text/javascript; charset=utf-8" },
+    });
+  }
+
+  // pagefind palette overrides (Anthropic skin)
+  if ((method === "GET" || method === "HEAD") && pathname === "/pagefind-overrides.css") {
+    if (!existsSync(OVERRIDES_FILE)) {
+      return new Response("/* pagefind-overrides.css missing */", {
+        status: 200,
+        headers: { "content-type": "text/css; charset=utf-8" },
+      });
+    }
+    return new Response(readFileSync(OVERRIDES_FILE), {
+      status: 200,
+      headers: {
+        "content-type": "text/css; charset=utf-8",
+        "cache-control": "no-cache",
+      },
     });
   }
 

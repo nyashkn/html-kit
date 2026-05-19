@@ -1,0 +1,225 @@
+/* pagefind-overrides.css — Anthropic palette skin for Pagefind 1.5
+ *
+ * Loaded AFTER pagefind-component-ui.css. Targets the --pf-* custom-property
+ * surface where possible, and selectively overrides .pf-* class rules where
+ * a token doesn't exist. Pagefind 1.5 is light-DOM, so :root cascade reaches
+ * inside the modal — fallback hexes are listed for use outside html-kit pages.
+ */
+
+:root {
+  --pf-font: var(--sans, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+
+  --pf-background: var(--ivory, #FAF9F5);
+  --pf-text: var(--slate, #141413);
+  --pf-text-secondary: var(--g700, #3D3D3A);
+  --pf-text-muted: var(--g500, #87867F);
+
+  --pf-border: var(--g200, #E6E3DA);
+  --pf-border-focus: var(--clay, #D97757);
+  --pf-border-radius: 10px;
+
+  --pf-hover: var(--g100, #F0EEE6);
+  --pf-mark: var(--oat, #E3DACC);
+
+  --pf-modal-backdrop: rgba(20, 20, 19, 0.42);
+  --pf-modal-max-width: 760px;
+  --pf-modal-top: 6vh;
+  --pf-shadow-lg: 0 24px 60px -20px rgba(20, 20, 19, 0.28);
+
+  --pf-outline-focus: var(--clay, #D97757);
+  --pf-outline-width: 2px;
+  --pf-outline-offset: 2px;
+
+  --pf-input-height: 52px;
+  --pf-input-font-size: 16px;
+  --pf-result-title-font-size: 16px;
+  --pf-result-excerpt-font-size: 13px;
+}
+
+/* ----- modal surface ----- */
+:is(*, #\#) :is(*, #\#) pagefind-modal {
+  background: var(--pf-modal-backdrop);
+}
+:is(*, #\#) :is(*, #\#) .pf-modal-body {
+  border: 1px solid var(--pf-border);
+  border-radius: var(--pf-border-radius);
+  box-shadow: var(--pf-shadow-lg);
+  background: var(--pf-background);
+  overflow: hidden;
+}
+
+/* ----- header: eyebrow + serif headline ----- */
+:is(*, #\#) :is(*, #\#) .pf-modal-header {
+  background: var(--pf-background);
+  border-bottom: 1px solid var(--pf-border);
+  padding: 22px 24px 14px;
+}
+:is(*, #\#) :is(*, #\#) .pf-modal-header-content::before {
+  content: "Search · ⌘K";
+  display: block;
+  font-family: var(--mono, ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--g500, #87867F);
+  margin-bottom: 8px;
+}
+:is(*, #\#) :is(*, #\#) .pf-modal-header-content {
+  font-family: var(--serif, ui-serif, Georgia, "Times New Roman", Times, serif);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  color: var(--slate, #141413);
+}
+
+/* ----- close button ----- */
+:is(*, #\#) :is(*, #\#) .pf-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--pf-border);
+  background: var(--paper, #FFFFFF);
+  color: var(--slate, #141413);
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+:is(*, #\#) :is(*, #\#) .pf-modal-close:hover {
+  background: var(--g100, #F0EEE6);
+  border-color: var(--g300, #D1CFC5);
+}
+:is(*, #\#) :is(*, #\#) .pf-modal-close:active {
+  transform: scale(0.96);
+}
+:is(*, #\#) :is(*, #\#) .pf-modal-close:focus-visible {
+  outline: var(--pf-outline-width) solid var(--pf-outline-focus);
+  outline-offset: var(--pf-outline-offset);
+}
+
+/* ----- search input ----- */
+:is(*, #\#) :is(*, #\#) .pf-input-wrapper {
+  border-radius: 8px;
+  border: 1px solid var(--pf-border);
+  background: var(--paper, #FFFFFF);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+:is(*, #\#) :is(*, #\#) .pf-input-wrapper:focus-within {
+  border-color: var(--pf-border-focus);
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.18);
+}
+:is(*, #\#) :is(*, #\#) .pf-input {
+  font-family: var(--pf-font);
+  font-size: var(--pf-input-font-size);
+  color: var(--slate, #141413);
+}
+:is(*, #\#) :is(*, #\#) .pf-input::placeholder {
+  color: var(--g500, #87867F);
+}
+
+/* ----- filter chips / dropdown trigger ----- */
+:is(*, #\#) :is(*, #\#) .pf-dropdown-trigger,
+:is(*, #\#) :is(*, #\#) .pf-filter-checkbox {
+  font-family: var(--mono, ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--g700, #3D3D3A);
+  background: var(--paper, #FFFFFF);
+  border: 1px solid var(--pf-border);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+:is(*, #\#) :is(*, #\#) .pf-dropdown-trigger:hover {
+  background: var(--g100, #F0EEE6);
+}
+
+/* ----- results list — ticket-like cards ----- */
+:is(*, #\#) :is(*, #\#) .pf-results,
+:is(*, #\#) :is(*, #\#) .pf-modal-body-content {
+  background: var(--pf-background);
+}
+:is(*, #\#) :is(*, #\#) .pf-result,
+:is(*, #\#) :is(*, #\#) .pf-result-card {
+  background: var(--paper, #FFFFFF);
+  border: 1px solid var(--pf-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 8px 0;
+  transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+:is(*, #\#) :is(*, #\#) .pf-result:hover,
+:is(*, #\#) :is(*, #\#) .pf-result-card:hover {
+  border-color: var(--g300, #D1CFC5);
+  background: var(--g100, #F0EEE6);
+}
+:is(*, #\#) :is(*, #\#) .pf-result-link:focus-visible {
+  outline: var(--pf-outline-width) solid var(--pf-outline-focus);
+  outline-offset: var(--pf-outline-offset);
+  border-radius: 6px;
+}
+:is(*, #\#) :is(*, #\#) .pf-result-title {
+  font-family: var(--serif, ui-serif, Georgia, "Times New Roman", Times, serif);
+  font-weight: 500;
+  font-size: 15.5px;
+  letter-spacing: -0.005em;
+  color: var(--slate, #141413);
+}
+:is(*, #\#) :is(*, #\#) .pf-result-excerpt {
+  font-family: var(--pf-font);
+  font-size: var(--pf-result-excerpt-font-size);
+  line-height: 1.5;
+  color: var(--g700, #3D3D3A);
+}
+:is(*, #\#) :is(*, #\#) .pf-result-excerpt mark,
+:is(*, #\#) :is(*, #\#) .pf-result mark {
+  background: var(--pf-mark);
+  color: var(--slate, #141413);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* ----- heading chips (project filter badges) ----- */
+:is(*, #\#) :is(*, #\#) .pf-heading-chip {
+  font-family: var(--mono, ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  background: var(--oat, #E3DACC);
+  color: var(--slate, #141413);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* ----- footer / keyboard hints ----- */
+:is(*, #\#) :is(*, #\#) .pf-modal-footer {
+  background: var(--g100, #F0EEE6);
+  border-top: 1px solid var(--pf-border);
+  font-family: var(--mono, ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace);
+  font-size: 11px;
+  color: var(--g500, #87867F);
+  letter-spacing: 0.04em;
+}
+:is(*, #\#) :is(*, #\#) .pf-key,
+:is(*, #\#) :is(*, #\#) .pf-searchbox-footer-key {
+  background: var(--paper, #FFFFFF);
+  border: 1px solid var(--pf-border);
+  color: var(--slate, #141413);
+  border-radius: 4px;
+}
+
+/* ----- empty state ----- */
+:is(*, #\#) :is(*, #\#) .pf-empty-text {
+  font-family: var(--serif, ui-serif, Georgia, "Times New Roman", Times, serif);
+  font-style: italic;
+  color: var(--g500, #87867F);
+}
+
+/* ----- trigger button (when inline) ----- */
+:is(*, #\#) :is(*, #\#) .pf-trigger-btn {
+  font-family: var(--mono, ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace);
+  background: var(--paper, #FFFFFF);
+  border: 1px solid var(--pf-border);
+  color: var(--slate, #141413);
+  border-radius: 8px;
+}
+:is(*, #\#) :is(*, #\#) .pf-trigger-btn:hover {
+  background: var(--g100, #F0EEE6);
+  border-color: var(--g300, #D1CFC5);
+}
