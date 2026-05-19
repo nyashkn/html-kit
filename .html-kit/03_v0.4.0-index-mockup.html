@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>html-kit · index · daemon :63839</title>
+<style>
+  :root {
+    /* core */
+    --ivory:  #FAF9F5;
+    --paper:  #FFFFFF;
+    --slate:  #141413;
+    /* accents */
+    --clay:   #D97757;
+    --clay-d: #B85C3E;
+    --oat:    #E3DACC;
+    --olive:  #788C5D;
+    --sage:   #A8B89A;
+    --rose:   #C97B7B;
+    --dust:   #B9A89A;
+    --stone:  #8E8579;
+    /* greys */
+    --g100:   #F0EEE6;
+    --g200:   #E6E3DA;
+    --g300:   #D1CFC5;
+    --g500:   #87867F;
+    --g700:   #3D3D3A;
+    /* typography */
+    --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
+    --sans:  system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono:  ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--ivory);
+    color: var(--slate);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 36px 28px 80px; }
+
+  header { margin-bottom: 14px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--g500);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 34px;
+    letter-spacing: -0.012em;
+    margin: 6px 0 4px;
+  }
+  .sub {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--g500);
+    margin: 0;
+    font-size: 15px;
+  }
+
+  /* sticky toolbar */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--ivory);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0 12px;
+    margin: 18px 0 14px;
+    border-bottom: 1.5px solid var(--g200);
+  }
+  .summary {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--g700);
+    letter-spacing: 0.01em;
+  }
+  .summary b { color: var(--slate); font-weight: 600; }
+  .summary .dot { color: var(--g300); margin: 0 6px; }
+  .spacer { flex: 1; }
+  .pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--paper);
+    color: var(--g700);
+    border: 1.5px solid var(--g200);
+    border-radius: 999px;
+    padding: 5px 11px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  .pill:hover { border-color: var(--g500); }
+  .pill.active {
+    background: var(--slate);
+    color: var(--ivory);
+    border-color: var(--slate);
+  }
+  .filter-select {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--g700);
+    background: var(--paper);
+    border: 1.5px solid var(--g200);
+    border-radius: 999px;
+    padding: 5px 28px 5px 12px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--g500) 50%),
+      linear-gradient(135deg, var(--g500) 50%, transparent 50%);
+    background-position:
+      calc(100% - 14px) 50%,
+      calc(100% - 10px) 50%;
+    background-size: 4px 4px;
+    background-repeat: no-repeat;
+  }
+  .filter-select:hover { border-color: var(--g500); }
+  button.primary {
+    background: var(--slate);
+    color: var(--ivory);
+    border: 1.5px solid var(--slate);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  button.primary:hover { background: var(--g700); }
+  button.primary kbd {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: rgba(250,249,245,0.14);
+    border: 1px solid rgba(250,249,245,0.22);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  /* dense index list */
+  .index-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .project-section {
+    display: flex;
+    flex-direction: column;
+  }
+  .project-head {
+    position: sticky;
+    top: 56px;
+    background: var(--ivory);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 0 6px;
+    border-bottom: 1px solid var(--g200);
+    margin-bottom: 2px;
+    z-index: 3;
+  }
+  .project-head h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--slate);
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .project-head .project-path {
+    font-family: var(--mono);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--g500);
+    letter-spacing: 0.01em;
+  }
+  .project-head .project-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--g500);
+    letter-spacing: 0.02em;
+    margin-left: auto;
+  }
+
+  .index-row {
+    display: grid;
+    grid-template-columns: 44px 1fr auto auto;
+    gap: 14px;
+    align-items: center;
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--g100);
+    cursor: pointer;
+    transition: background-color 80ms ease;
+  }
+  .index-row:hover { background: var(--g100); }
+  .index-row:last-child { border-bottom: none; }
+  .row-nn {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--g500);
+    letter-spacing: 0.02em;
+  }
+  .row-title {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--slate);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.35;
+  }
+  .archetype-chip {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .archetype-chip[data-archetype="SPEC"]      { background: var(--oat); color: var(--g700); border-color: var(--g300); }
+  .archetype-chip[data-archetype="EXPLAINER"] { background: var(--g100); color: var(--g700); border-color: var(--g200); }
+  .archetype-chip[data-archetype="TRIAGE"]    { background: rgba(217,119,87,0.15); color: var(--clay-d); border-color: rgba(217,119,87,0.30); }
+  .archetype-chip[data-archetype="RETRO"]     { background: var(--g200); color: var(--g700); border-color: var(--g300); }
+  .archetype-chip[data-archetype="FLOW"]      { background: rgba(168,184,154,0.22); color: var(--olive); border-color: rgba(168,184,154,0.45); }
+  .row-mtime {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--g500);
+    letter-spacing: 0.02em;
+    text-align: right;
+    min-width: 88px;
+  }
+
+  /* footer */
+  .footer-eyebrow {
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid var(--g200);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--g500);
+  }
+  .footer-eyebrow kbd {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--paper);
+    border: 1px solid var(--g200);
+    border-radius: 3px;
+    padding: 0 5px;
+    color: var(--g700);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* accordions */
+  .accordions { margin-top: 22px; display: flex; flex-direction: column; gap: 8px; }
+  details {
+    background: var(--paper);
+    border: 1.5px solid var(--g200);
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+  }
+  details[open] { border-color: var(--g300); }
+  summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--g700);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before {
+    content: "+";
+    font-family: var(--mono);
+    color: var(--clay);
+    font-weight: 600;
+    font-size: 14px;
+    width: 12px;
+    display: inline-block;
+  }
+  details[open] > summary::before { content: "−"; }
+  summary b { color: var(--slate); font-weight: 600; }
+  details .body { padding: 0 16px 14px; }
+
+  pre.code {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.55;
+    background: var(--g100);
+    border: 1px solid var(--g200);
+    border-radius: 6px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    color: var(--g700);
+    margin: 4px 0 6px;
+    white-space: pre;
+  }
+  pre.code .c { color: var(--g500); font-style: italic; }
+  pre.code .k { color: var(--clay-d); font-weight: 600; }
+  pre.code .s { color: var(--olive); }
+  pre.code .p { color: var(--slate); }
+
+  .accordion-note {
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--g700);
+    margin: 0 0 8px;
+    max-width: 740px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap" data-component="index-page">
+
+  <header data-component="page-head">
+    <div class="eyebrow">HTML-KIT · INDEX · DAEMON :63839</div>
+    <h1>All artifacts</h1>
+    <p class="sub">Cross-project search via ⌘K · live annotation loop</p>
+  </header>
+
+  <div class="toolbar" data-component="filter-bar">
+    <div class="summary">
+      <b>17</b> docs <span class="dot">·</span> <b>7</b> projects <span class="dot">·</span> updated 2026-05-19 01:35
+    </div>
+    <div class="spacer"></div>
+    <button class="pill active" type="button" data-scope="this-repo">this repo</button>
+    <button class="pill" type="button" data-scope="all">all</button>
+    <select class="filter-select" data-component="archetype-filter" aria-label="filter by archetype">
+      <option value="all">archetype: all</option>
+      <option value="SPEC">SPEC</option>
+      <option value="EXPLAINER">EXPLAINER</option>
+      <option value="TRIAGE">TRIAGE</option>
+      <option value="FLOW">FLOW</option>
+      <option value="RETRO">RETRO</option>
+    </select>
+    <button class="primary" type="button" data-component="search-launch"><kbd>⌘K</kbd> Search</button>
+  </div>
+
+  <div class="index-list" data-component="index-list">
+
+    <!-- BUILD-INDEX-LIST:start -->
+
+    <section class="project-section" data-component="project-section" data-project="html-kit">
+      <div class="project-head" data-component="project-head">
+        <h2>html-kit</h2>
+        <span class="project-count">· 2 docs</span>
+      </div>
+      <a class="index-row" data-component="index-row" href="/p/html-kit/01_v0.3.0-spec.html" data-archetype="SPEC">
+        <span class="row-nn">01_</span>
+        <span class="row-title">html-kit v0.3.0 — spec</span>
+        <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
+        <span class="row-mtime">May 18 05:56</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/html-kit/02_improvement-verdict.html" data-archetype="EXPLAINER">
+        <span class="row-nn">02_</span>
+        <span class="row-title">html-kit, improvement verdict</span>
+        <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
+        <span class="row-mtime">May 18 05:24</span>
+      </a>
+    </section>
+
+    <section class="project-section" data-component="project-section" data-project="sga-startup-plans">
+      <div class="project-head" data-component="project-head">
+        <h2>sga-startup-plans</h2>
+        <span class="project-count">· 4 docs</span>
+      </div>
+      <a class="index-row" data-component="index-row" href="/p/sga-startup-plans/01_branches-and-deploy.html" data-archetype="EXPLAINER">
+        <span class="row-nn">01_</span>
+        <span class="row-title">SGA branches and deploy walkthrough</span>
+        <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
+        <span class="row-mtime">May 15 21:54</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/sga-startup-plans/02_demo-readiness.html" data-archetype="EXPLAINER">
+        <span class="row-nn">02_</span>
+        <span class="row-title">SGA Platform, demo readiness</span>
+        <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
+        <span class="row-mtime">May 17 04:46</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/sga-startup-plans/04_backlog-triage-v2.html" data-archetype="TRIAGE">
+        <span class="row-nn">04_</span>
+        <span class="row-title">SGA, backlog triage v2</span>
+        <span class="archetype-chip" data-archetype="TRIAGE">TRIAGE</span>
+        <span class="row-mtime">May 15 21:11</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/sga-startup-plans/05_zitadel-smtp-config.html" data-archetype="SPEC">
+        <span class="row-nn">05_</span>
+        <span class="row-title">Zitadel SMTP config decision</span>
+        <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
+        <span class="row-mtime">May 14 18:02</span>
+      </a>
+    </section>
+
+    <section class="project-section" data-component="project-section" data-project="example-media-pipelines">
+      <div class="project-head" data-component="project-head">
+        <h2>example-media-pipelines</h2>
+        <span class="project-count">· 3 docs</span>
+      </div>
+      <a class="index-row" data-component="index-row" href="/p/example-media-pipelines/01_royalty-reconciliation.html" data-archetype="FLOW">
+        <span class="row-nn">01_</span>
+        <span class="row-title">Royalty reconciliation flow</span>
+        <span class="archetype-chip" data-archetype="FLOW">FLOW</span>
+        <span class="row-mtime">May 15 22:18</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/example-media-pipelines/02_ingest-dlq-triage.html" data-archetype="TRIAGE">
+        <span class="row-nn">02_</span>
+        <span class="row-title">Ingest dlq triage, Q2</span>
+        <span class="archetype-chip" data-archetype="TRIAGE">TRIAGE</span>
+        <span class="row-mtime">May 14 10:54</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/example-media-pipelines/03_partner-csv-rfc.html" data-archetype="SPEC">
+        <span class="row-nn">03_</span>
+        <span class="row-title">Partner CSV schema RFC</span>
+        <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
+        <span class="row-mtime">May 11 14:02</span>
+      </a>
+    </section>
+
+    <section class="project-section" data-component="project-section" data-project="example-co-ops">
+      <div class="project-head" data-component="project-head">
+        <h2>example-co-ops</h2>
+        <span class="project-count">· 2 docs</span>
+      </div>
+      <a class="index-row" data-component="index-row" href="/p/example-co-ops/01_traefik-route-migration.html" data-archetype="FLOW">
+        <span class="row-nn">01_</span>
+        <span class="row-title">Traefik route migration plan</span>
+        <span class="archetype-chip" data-archetype="FLOW">FLOW</span>
+        <span class="row-mtime">May 18 21:12</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/example-co-ops/02_backup-policy-spec.html" data-archetype="SPEC">
+        <span class="row-nn">02_</span>
+        <span class="row-title">Backup policy spec, v2</span>
+        <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
+        <span class="row-mtime">May 17 12:50</span>
+      </a>
+    </section>
+
+    <section class="project-section" data-component="project-section" data-project="agent-deck">
+      <div class="project-head" data-component="project-head">
+        <h2>agent-deck</h2>
+        <span class="project-count">· 3 docs</span>
+      </div>
+      <a class="index-row" data-component="index-row" href="/p/agent-deck/01_mcp-attach-lifecycle.html" data-archetype="FLOW">
+        <span class="row-nn">01_</span>
+        <span class="row-title">MCP attach lifecycle diagram</span>
+        <span class="archetype-chip" data-archetype="FLOW">FLOW</span>
+        <span class="row-mtime">May 19 01:55</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/agent-deck/02_session-forking-rfc.html" data-archetype="SPEC">
+        <span class="row-nn">02_</span>
+        <span class="row-title">Session forking RFC</span>
+        <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
+        <span class="row-mtime">May 18 17:20</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/agent-deck/03_v0.6-launch-retro.html" data-archetype="RETRO">
+        <span class="row-nn">03_</span>
+        <span class="row-title">v0.6 launch retro</span>
+        <span class="archetype-chip" data-archetype="RETRO">RETRO</span>
+        <span class="row-mtime">May 09 19:44</span>
+      </a>
+    </section>
+
+    <section class="project-section" data-component="project-section" data-project="naisiae-lema-example-insights">
+      <div class="project-head" data-component="project-head">
+        <h2>naisiae-lema-example-insights</h2>
+        <span class="project-count">· 2 docs</span>
+      </div>
+      <a class="index-row" data-component="index-row" href="/p/naisiae-lema-example-insights/01_cohort-retention.html" data-archetype="EXPLAINER">
+        <span class="row-nn">01_</span>
+        <span class="row-title">Cohort retention explainer</span>
+        <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
+        <span class="row-mtime">May 18 13:36</span>
+      </a>
+      <a class="index-row" data-component="index-row" href="/p/naisiae-lema-example-insights/02_onboarding-journey-flow.html" data-archetype="FLOW">
+        <span class="row-nn">02_</span>
+        <span class="row-title">Onboarding journey flow</span>
+        <span class="archetype-chip" data-archetype="FLOW">FLOW</span>
+        <span class="row-mtime">May 13 16:54</span>
+      </a>
+    </section>
+
+    <section class="project-section" data-component="project-section" data-project="_old_tmp">
+      <div class="project-head" data-component="project-head">
+        <h2>_old_tmp</h2>
+        <span class="project-count">· 1 doc</span>
+      </div>
+      <a class="index-row" data-component="index-row" href="/p/_old_tmp/01_palette-experiments.html" data-archetype="EXPLAINER">
+        <span class="row-nn">01_</span>
+        <span class="row-title">Scratch, palette experiments</span>
+        <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
+        <span class="row-mtime">Apr 28 22:10</span>
+      </a>
+    </section>
+
+    <!-- BUILD-INDEX-LIST:end -->
+
+  </div>
+
+  <div class="footer-eyebrow" data-component="keyboard-hints">
+    <kbd>⌘K</kbd> search · <kbd>↑</kbd><kbd>↓</kbd> nav · <kbd>↵</kbd> open · <kbd>ESC</kbd> close
+  </div>
+
+  <div class="accordions" data-component="deep-detail">
+
+    <details>
+      <summary><b>Daemon endpoints</b> · what :63839 serves</summary>
+      <div class="body">
+        <p class="accordion-note">Single Bun process. All routes resolve against the per-repo <span style="font-family:var(--mono);font-size:12px;color:var(--g700)">.html-kit/</span> dir or its pagefind index.</p>
+<pre class="code"><span class="c"># method  path                                purpose</span>
+<span class="k">GET</span>   <span class="s">/</span>                                   <span class="c"># index page (this view)</span>
+<span class="k">GET</span>   <span class="s">/p/&lt;slug&gt;/</span>                          <span class="c"># project listing</span>
+<span class="k">GET</span>   <span class="s">/p/&lt;slug&gt;/&lt;file&gt;.html</span>              <span class="c"># single artifact, w/ injected head</span>
+
+<span class="k">POST</span>  <span class="s">/api/annotate</span>                       <span class="c"># body: {path, selector, note}</span>
+<span class="k">GET</span>   <span class="s">/api/annotations/&lt;path&gt;</span>             <span class="c"># list notes for one artifact</span>
+<span class="k">POST</span>  <span class="s">/api/repos</span>                          <span class="c"># register a repo by abs path</span>
+
+<span class="k">GET</span>   <span class="s">/pagefind/*</span>                         <span class="c"># static pagefind index + ui assets</span>
+<span class="k">GET</span>   <span class="s">/search</span><span class="p">?</span><span class="s">q=...</span>                        <span class="c"># json search proxy (cross-repo)</span></pre>
+      </div>
+    </details>
+
+    <details>
+      <summary><b>Annotation injection</b> · what daemon adds to every <code style="font-family:var(--mono);font-size:11px;color:var(--g700)">&lt;head&gt;</code></summary>
+      <div class="body">
+        <p class="accordion-note">When daemon serves an artifact, it streams the file and rewrites the head to wire in pagefind + the annotation strip. The original HTML stays self-contained on disk.</p>
+<pre class="code"><span class="p">&lt;</span><span class="k">head</span> <span class="s">data-component</span><span class="p">=</span><span class="s">"html-kit-injected"</span><span class="p">&gt;</span>
+  <span class="c">&lt;!-- original head preserved above this line --&gt;</span>
+
+  <span class="p">&lt;</span><span class="k">link</span> <span class="s">rel</span><span class="p">=</span><span class="s">"stylesheet"</span> <span class="s">href</span><span class="p">=</span><span class="s">"/pagefind/pagefind-ui.css"</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="k">script</span> <span class="s">src</span><span class="p">=</span><span class="s">"/pagefind/pagefind-ui.js"</span> <span class="s">defer</span><span class="p">&gt;&lt;/</span><span class="k">script</span><span class="p">&gt;</span>
+
+  <span class="p">&lt;</span><span class="k">script</span> <span class="s">src</span><span class="p">=</span><span class="s">"/_kit/annotation-strip.js"</span> <span class="s">defer</span><span class="p">&gt;&lt;/</span><span class="k">script</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="k">link</span> <span class="s">rel</span><span class="p">=</span><span class="s">"stylesheet"</span> <span class="s">href</span><span class="p">=</span><span class="s">"/_kit/annotation-strip.css"</span><span class="p">&gt;</span>
+
+  <span class="p">&lt;</span><span class="k">meta</span> <span class="s">name</span><span class="p">=</span><span class="s">"html-kit:repo"</span> <span class="s">content</span><span class="p">=</span><span class="s">"sga-startup-plans"</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="k">meta</span> <span class="s">name</span><span class="p">=</span><span class="s">"html-kit:path"</span> <span class="s">content</span><span class="p">=</span><span class="s">"02_zitadel-smtp-config.html"</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="k">head</span><span class="p">&gt;</span></pre>
+      </div>
+    </details>
+
+    <details>
+      <summary><b>Register a new repo</b> · <code style="font-family:var(--mono);font-size:11px;color:var(--g700)">bun run html-kit:register</code></summary>
+      <div class="body">
+        <p class="accordion-note">From inside any repo, register it with the running daemon. The repo's <span style="font-family:var(--mono);font-size:12px;color:var(--g700)">.html-kit/</span> dir gets watched and indexed; new artifacts appear in the index within ~1s.</p>
+<pre class="code"><span class="c"># 1. start the daemon once (any terminal)</span>
+<span class="k">bun</span> <span class="s">run html-kit:daemon</span>
+<span class="c">› html-kit daemon listening on :63839</span>
+
+<span class="c"># 2. inside any repo with .html-kit/ artifacts</span>
+<span class="k">cd</span> <span class="s">~/code/sga-startup-plans</span>
+<span class="k">bun</span> <span class="s">run html-kit:register</span>
+
+<span class="c"># under the hood, POST /api/repos</span>
+<span class="k">curl</span> <span class="s">-sX</span> <span class="k">POST</span> <span class="s">http://localhost:63839/api/repos</span> \
+  <span class="s">-H</span> <span class="s">"content-type: application/json"</span> \
+  <span class="s">-d</span> <span class="s">'{"path":"/Users/me/code/sga-startup-plans","slug":"sga"}'</span>
+
+<span class="c"># response</span>
+<span class="p">{</span> <span class="s">"ok"</span><span class="p">:</span> <span class="k">true</span><span class="p">,</span> <span class="s">"slug"</span><span class="p">:</span> <span class="s">"sga-startup-plans"</span><span class="p">,</span> <span class="s">"watched"</span><span class="p">:</span> <span class="k">5</span> <span class="p">}</span></pre>
+      </div>
+    </details>
+
+  </div>
+
+</div>
+
+<pagefind-config bundle-path="/pagefind/"></pagefind-config>
+<pagefind-modal-trigger compact></pagefind-modal-trigger>
+<pagefind-modal></pagefind-modal>
+
+</body>
+</html>
