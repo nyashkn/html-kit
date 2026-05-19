@@ -3,7 +3,7 @@
 // Prints the absolute path to stdout; all errors and prompts go to stderr.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, openSync, readSync, closeSync } from "fs";
-import { join, dirname } from "path";
+import { join, dirname, basename } from "path";
 
 const slug = process.argv[2];
 if (!slug) {
@@ -29,6 +29,27 @@ async function nextNumber(dir: string): Promise<string> {
   const out = await new Response(proc.stdout).text();
   await proc.exited;
   return out.trim();
+}
+
+// Fire-and-forget registration with the daemon. Silently swallow any error
+// (daemon down, network, timeout) so the path resolution flow never blocks.
+async function registerWithDaemon(slug: string, dir: string): Promise<void> {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 500);
+    try {
+      await fetch("http://localhost:63839/api/repos", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ slug, dir }),
+        signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    // silently swallow — daemon optional
+  }
 }
 
 async function main() {
@@ -72,13 +93,17 @@ async function main() {
     }
 
     const nn = await nextNumber(kitDir);
-    process.stdout.write(join(kitDir, `${nn}_${slug}.html`) + "\n");
+    const outPath = join(kitDir, `${nn}_${slug}.html`);
+    await registerWithDaemon(basename(gitRoot), gitRoot);
+    process.stdout.write(outPath + "\n");
   } else {
     const projectSlug = process.cwd().replace(/\//g, "-").replace(/^-/, "");
     const outDir = join(process.env.HOME!, ".html-kit", projectSlug);
     mkdirSync(outDir, { recursive: true });
     const nn = await nextNumber(outDir);
-    process.stdout.write(join(outDir, `${nn}_${slug}.html`) + "\n");
+    const outPath = join(outDir, `${nn}_${slug}.html`);
+    await registerWithDaemon(projectSlug, process.cwd());
+    process.stdout.write(outPath + "\n");
   }
 }
 
