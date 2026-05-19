@@ -348,11 +348,17 @@ function renderIndex(template: string, artifacts: Artifact[]): string {
   // 3. wire pagefind UI assets in head if not already present
   const pagefindAssets =
     `<link rel="stylesheet" href="/pagefind/pagefind-component-ui.css">\n` +
+    `<link rel="stylesheet" href="/pagefind-overrides.css">\n` +
     `<script src="/pagefind/pagefind-component-ui.js" type="module"></script>\n`;
   if (!/pagefind-component-ui\.css/.test(html)) {
     if (/<\/head>/i.test(html)) {
       html = html.replace(/<\/head>/i, `${pagefindAssets}</head>`);
     }
+  } else if (!/pagefind-overrides\.css/.test(html)) {
+    html = html.replace(
+      /<link[^>]+pagefind-component-ui\.css[^>]*>/i,
+      `$&\n<link rel="stylesheet" href="/pagefind-overrides.css">`,
+    );
   }
   // 4. pagefind web components are already in the template; only inject if missing
   const pagefindWebComponents =
