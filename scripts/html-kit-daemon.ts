@@ -6,6 +6,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, statSync, watch, openSync, readSync, closeSync, appendFileSync } from "fs";
 import { join, resolve, sep } from "path";
 import { homedir } from "os";
+import { discoverRoots } from "./discover-roots";
 
 const PORT = 63839;
 const HOME = homedir();
@@ -17,6 +18,18 @@ const INDEX_HTML = join(DAEMON_DIR, "index.html");
 const PAGEFIND_DIR = join(DAEMON_DIR, "pagefind");
 const PATTERN_FILE = join(import.meta.dir, "..", "patterns", "annotation-strip.md");
 const OVERRIDES_FILE = join(import.meta.dir, "..", "assets", "pagefind-overrides.css");
+
+// Reserved URL prefixes that must NEVER be treated as slug routes. Order
+// matters only for the slug-name-collision rule in build-index.ts; here it
+// is just a lookup set used by the flat artifact route to bail out fast.
+const RESERVED_TOP_LEVEL = new Set([
+  "p",                 // legacy redirect handler still owns /p/*
+  "api",
+  "pagefind",
+  "events",
+  "annotation-strip.js",
+  "pagefind-overrides.css",
+]);
 
 type ReposMap = Record<string, string>; // slug -> absolute artifact dir
 
@@ -91,7 +104,7 @@ function injectOverlay(html: string): string {
   const headExtras =
     `<link rel="stylesheet" href="/pagefind/pagefind-component-ui.css">\n` +
     `<link rel="stylesheet" href="/pagefind-overrides.css">\n` +
-    `<script src="/pagefind/pagefind-component-ui.js" type="module"></script>\n` +
+    `<script src="/pagefind/pagefind-component-ui.js" defer></script>\n` +
     `<script src="/annotation-strip.js" defer></script>\n`;
   const bodyExtras = `<pagefind-config bundle-path="/pagefind/"></pagefind-config><pagefind-modal-trigger compact></pagefind-modal-trigger><pagefind-modal></pagefind-modal>\n`;
   let out = html;
@@ -250,49 +263,14 @@ async function handle(req: Request): Promise<Response> {
     return serveStaticFile(abs);
   }
 
-  // /p/<slug>/  or  /p/<slug>/<file>.html
+  // Legacy /p/<slug>/* → 301 redirect to flat /<slug>/* form. Preserves
+  // bookmarks while migrating UI/index to flat namespace.
   if ((method === "GET" || method === "HEAD") && pathname.startsWith("/p/")) {
-    const rest = pathname.slice("/p/".length);
-    const slashIdx = rest.indexOf("/");
-    const slug = slashIdx === -1 ? rest : rest.slice(0, slashIdx);
-    const tail = slashIdx === -1 ? "" : rest.slice(slashIdx + 1);
-
-    if (tail === "" || tail === "") {
-      // /p/<slug>/  → index w/ scope querystring
-      if (!existsSync(INDEX_HTML)) {
-        return new Response("index not built — run bun scripts/build-index.ts", { status: 404, headers: { "content-type": "text/plain" } });
-      }
-      let html = readFileSync(INDEX_HTML, "utf8");
-      const scopeScript = `<script>window.__HTMLKIT_SCOPE__=${JSON.stringify(slug)};</script>\n`;
-      if (/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, scopeScript + "</head>");
-      else html = scopeScript + html;
-      return new Response(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
-    }
-
-    const repos = loadRepos();
-    // Build ordered list of candidate dirs for this slug.
-    const candidates: string[] = [];
-    if (repos[slug]) {
-      candidates.push(repos[slug]);
-      candidates.push(join(repos[slug], ".html-kit"));
-    }
-    const kitDir = join(KIT_HOME, slug);
-    if (existsSync(kitDir)) candidates.push(kitDir);
-    if (candidates.length === 0) return notFound(`unknown slug: ${slug}`);
-
-    let abs = "";
-    for (const c of candidates) {
-      const try_ = resolve(c, tail);
-      if (existsSync(try_)) { abs = try_; break; }
-    }
-    if (!abs) return notFound(`not found: ${tail}`);
-    if (!isSafePath(abs, repos)) {
-      return new Response("forbidden", { status: 403, headers: { "content-type": "text/plain" } });
-    }
-    if (!existsSync(abs)) return notFound(`not found: ${tail}`);
-    const raw = readFileSync(abs, "utf8");
-    const injected = injectOverlay(raw);
-    return new Response(injected, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+    const flat = "/" + pathname.slice("/p/".length);
+    return new Response(null, {
+      status: 301,
+      headers: { "location": flat + url.search },
+    });
   }
 
   // POST /api/annotate?path=<artifact-path>
@@ -346,6 +324,32 @@ async function handle(req: Request): Promise<Response> {
     });
   }
 
+  // POST /api/discover  — scan configured roots, merge new .html-kit repos
+  if (method === "POST" && pathname === "/api/discover") {
+    try {
+      const result = await discoverRoots();
+      if (result.added.length > 0) {
+        // re-arm watchers for newly added dirs
+        const repos = loadRepos();
+        for (const slug of result.added) {
+          const dir = repos[slug];
+          if (dir && existsSync(dir)) {
+            try { watch(dir, { recursive: true }, () => scheduleRebuild()); }
+            catch (e) { log(`[html-kit-daemon] watch failed for ${dir}: ${String(e)}`); }
+          }
+        }
+        scheduleRebuild();
+      }
+      return new Response(JSON.stringify(result), {
+        status: 200, headers: { "content-type": "application/json" },
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: String(e) }), {
+        status: 500, headers: { "content-type": "application/json" },
+      });
+    }
+  }
+
   // POST /api/repos
   if (method === "POST" && pathname === "/api/repos") {
     const body = await req.text();
@@ -369,7 +373,76 @@ async function handle(req: Request): Promise<Response> {
     });
   }
 
+  // Flat artifact namespace: /<slug>/ or /<slug>/<file>
+  // Must be last — only reached when nothing reserved matched.
+  if (method === "GET" || method === "HEAD") {
+    const res = tryFlatArtifact(pathname);
+    if (res) return res;
+  }
+
   return notFound(`no route: ${method} ${pathname}`);
+}
+
+// Resolve a /<slug>/<tail> URL against repos.json + ~/.html-kit/<slug>.
+// Returns null when the path isn't a slug-style route or the slug is unknown,
+// so the caller can fall through to its own 404. Returned Response is fully
+// formed (200/403/404) when this is a valid slug route.
+function tryFlatArtifact(pathname: string): Response | null {
+  const rest = pathname.slice(1);
+  if (rest.length === 0) return null;
+
+  const slashIdx = rest.indexOf("/");
+  const slug = slashIdx === -1 ? rest : rest.slice(0, slashIdx);
+  const tail = slashIdx === -1 ? "" : rest.slice(slashIdx + 1);
+
+  if (RESERVED_TOP_LEVEL.has(slug)) return null;
+
+  const repos = loadRepos();
+  const knownSlug = !!repos[slug] || existsSync(join(KIT_HOME, slug));
+  if (!knownSlug) return null;
+
+  if (tail === "") return serveScopedIndex(slug);
+  return serveArtifact(slug, tail, repos);
+}
+
+function serveScopedIndex(slug: string): Response {
+  if (!existsSync(INDEX_HTML)) {
+    return new Response("index not built — run bun scripts/build-index.ts", {
+      status: 404, headers: { "content-type": "text/plain" },
+    });
+  }
+  let html = readFileSync(INDEX_HTML, "utf8");
+  const scopeScript = `<script>window.__HTMLKIT_SCOPE__=${JSON.stringify(slug)};</script>\n`;
+  if (/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, scopeScript + "</head>");
+  else html = scopeScript + html;
+  return new Response(html, {
+    status: 200, headers: { "content-type": "text/html; charset=utf-8" },
+  });
+}
+
+function serveArtifact(slug: string, tail: string, repos: ReposMap): Response {
+  const candidates: string[] = [];
+  if (repos[slug]) {
+    candidates.push(repos[slug]);
+    candidates.push(join(repos[slug], ".html-kit"));
+  }
+  const kitDir = join(KIT_HOME, slug);
+  if (existsSync(kitDir)) candidates.push(kitDir);
+
+  let abs = "";
+  for (const c of candidates) {
+    const candidate = resolve(c, tail);
+    if (existsSync(candidate)) { abs = candidate; break; }
+  }
+  if (!abs) return notFound(`not found: ${tail}`);
+  if (!isSafePath(abs, repos)) {
+    return new Response("forbidden", { status: 403, headers: { "content-type": "text/plain" } });
+  }
+  const raw = readFileSync(abs, "utf8");
+  const injected = injectOverlay(raw);
+  return new Response(injected, {
+    status: 200, headers: { "content-type": "text/html; charset=utf-8" },
+  });
 }
 
 // --- main -----------------------------------------------------------------
@@ -380,6 +453,18 @@ async function main() {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
   process.on("exit", releaseLock);
+
+  // Auto-discover .html-kit/ dirs under configured scan roots before
+  // setting up watchers, so any newly-found repos are watched from boot.
+  try {
+    const r = await discoverRoots();
+    log(`[html-kit-daemon] discover: scanned=${r.scanned} added=${r.added.length} (${r.durationMs}ms)`);
+    if (r.added.length > 0) {
+      log(`[html-kit-daemon] discover added: ${r.added.join(", ")}`);
+    }
+  } catch (e) {
+    log(`[html-kit-daemon] discover failed: ${String(e)}`);
+  }
 
   const repos = loadRepos();
   const watchedCount = setupWatchers(repos);

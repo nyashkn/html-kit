@@ -3,3 +3,6 @@ node_modules/
 /tmp/
 *.log
 .html-kit/_archive/
+test-results/
+playwright-report/
+.playwright/

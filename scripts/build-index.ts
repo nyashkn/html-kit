@@ -251,7 +251,7 @@ function renderRow(a: Artifact, project: string): string {
   const tag = a.archetype;
   return (
     `      <a class="index-row" data-component="index-row" ` +
-    `href="/p/${htmlEscape(project)}/${htmlEscape(a.filename)}" ` +
+    `href="/${htmlEscape(project)}/${htmlEscape(a.filename)}" ` +
     `data-archetype="${htmlEscape(tag)}">\n` +
     `        <span class="row-nn">${htmlEscape(a.nn)}_</span>\n` +
     `        <span class="row-title">${htmlEscape(a.title)}</span>\n` +
@@ -349,7 +349,7 @@ function renderIndex(template: string, artifacts: Artifact[]): string {
   const pagefindAssets =
     `<link rel="stylesheet" href="/pagefind/pagefind-component-ui.css">\n` +
     `<link rel="stylesheet" href="/pagefind-overrides.css">\n` +
-    `<script src="/pagefind/pagefind-component-ui.js" type="module"></script>\n`;
+    `<script src="/pagefind/pagefind-component-ui.js" defer></script>\n`;
   if (!/pagefind-component-ui\.css/.test(html)) {
     if (/<\/head>/i.test(html)) {
       html = html.replace(/<\/head>/i, `${pagefindAssets}</head>`);

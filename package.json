@@ -1,9 +1,13 @@
 {
   "scripts": {
-    "html-kit:index": "bun scripts/build-index.ts"
+    "html-kit:index": "bun scripts/build-index.ts",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui"
   },
   "dependencies": {},
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/bun": "^1.3.14",
     "pagefind": "^1.5.2"
   }

@@ -330,6 +330,90 @@
     margin: 0 0 8px;
     max-width: 740px;
   }
+
+  /* rescan button — subtle outline variant of .pill */
+  button.rescan {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--paper);
+    color: var(--g700);
+    border: 1.5px solid var(--g200);
+    border-radius: 999px;
+    padding: 5px 11px 5px 9px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 100ms ease, color 100ms ease;
+  }
+  button.rescan:hover { border-color: var(--g500); color: var(--slate); }
+  button.rescan[disabled] { cursor: progress; color: var(--g500); border-color: var(--g200); }
+  button.rescan .ico {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    line-height: 11px;
+    text-align: center;
+    color: var(--clay);
+    font-weight: 600;
+  }
+  button.rescan[disabled] .ico {
+    animation: rescan-spin 0.9s linear infinite;
+    color: var(--g500);
+  }
+  @keyframes rescan-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* toast — top-right, stacked, auto-dismiss */
+  .toast-stack {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    pointer-events: auto;
+    min-width: 240px;
+    max-width: 360px;
+    background: var(--paper);
+    border: 1.5px solid var(--g200);
+    border-left-width: 3px;
+    border-left-color: var(--olive);
+    border-radius: 8px;
+    padding: 10px 14px 11px;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--g700);
+    box-shadow: 0 6px 18px -8px rgba(20,20,19,0.18), 0 2px 6px -2px rgba(20,20,19,0.08);
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.kind-err   { border-left-color: var(--rose); }
+  .toast.kind-info  { border-left-color: var(--stone); }
+  .toast .t-title {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--g500);
+    margin: 0 0 4px;
+  }
+  .toast .t-body { color: var(--slate); }
+  .toast .t-body b { font-weight: 600; }
+  .toast .t-body code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--g700);
+  }
 </style>
 </head>
 <body>
@@ -356,6 +440,7 @@
       <option value="FLOW">FLOW</option>
       <option value="RETRO">RETRO</option>
     </select>
+    <button class="rescan" type="button" data-component="rescan" title="Scan configured roots for new .html-kit/ dirs"><span class="ico">⟳</span> Rescan</button>
     <button class="primary" type="button" data-component="search-launch"><kbd>⌘K</kbd> Search</button>
   </div>
 
@@ -368,13 +453,13 @@
         <h2>html-kit</h2>
         <span class="project-count">· 2 docs</span>
       </div>
-      <a class="index-row" data-component="index-row" href="/p/html-kit/01_v0.3.0-spec.html" data-archetype="SPEC">
+      <a class="index-row" data-component="index-row" href="/html-kit/01_v0.3.0-spec.html" data-archetype="SPEC">
         <span class="row-nn">01_</span>
         <span class="row-title">html-kit v0.3.0 — spec</span>
         <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
         <span class="row-mtime">May 18 05:56</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/html-kit/02_improvement-verdict.html" data-archetype="EXPLAINER">
+      <a class="index-row" data-component="index-row" href="/html-kit/02_improvement-verdict.html" data-archetype="EXPLAINER">
         <span class="row-nn">02_</span>
         <span class="row-title">html-kit, improvement verdict</span>
         <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
@@ -387,25 +472,25 @@
         <h2>sga-startup-plans</h2>
         <span class="project-count">· 4 docs</span>
       </div>
-      <a class="index-row" data-component="index-row" href="/p/sga-startup-plans/01_branches-and-deploy.html" data-archetype="EXPLAINER">
+      <a class="index-row" data-component="index-row" href="/sga-startup-plans/01_branches-and-deploy.html" data-archetype="EXPLAINER">
         <span class="row-nn">01_</span>
         <span class="row-title">SGA branches and deploy walkthrough</span>
         <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
         <span class="row-mtime">May 15 21:54</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/sga-startup-plans/02_demo-readiness.html" data-archetype="EXPLAINER">
+      <a class="index-row" data-component="index-row" href="/sga-startup-plans/02_demo-readiness.html" data-archetype="EXPLAINER">
         <span class="row-nn">02_</span>
         <span class="row-title">SGA Platform, demo readiness</span>
         <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
         <span class="row-mtime">May 17 04:46</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/sga-startup-plans/04_backlog-triage-v2.html" data-archetype="TRIAGE">
+      <a class="index-row" data-component="index-row" href="/sga-startup-plans/04_backlog-triage-v2.html" data-archetype="TRIAGE">
         <span class="row-nn">04_</span>
         <span class="row-title">SGA, backlog triage v2</span>
         <span class="archetype-chip" data-archetype="TRIAGE">TRIAGE</span>
         <span class="row-mtime">May 15 21:11</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/sga-startup-plans/05_zitadel-smtp-config.html" data-archetype="SPEC">
+      <a class="index-row" data-component="index-row" href="/sga-startup-plans/05_zitadel-smtp-config.html" data-archetype="SPEC">
         <span class="row-nn">05_</span>
         <span class="row-title">Zitadel SMTP config decision</span>
         <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
@@ -418,19 +503,19 @@
         <h2>example-media-pipelines</h2>
         <span class="project-count">· 3 docs</span>
       </div>
-      <a class="index-row" data-component="index-row" href="/p/example-media-pipelines/01_royalty-reconciliation.html" data-archetype="FLOW">
+      <a class="index-row" data-component="index-row" href="/example-media-pipelines/01_royalty-reconciliation.html" data-archetype="FLOW">
         <span class="row-nn">01_</span>
         <span class="row-title">Royalty reconciliation flow</span>
         <span class="archetype-chip" data-archetype="FLOW">FLOW</span>
         <span class="row-mtime">May 15 22:18</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/example-media-pipelines/02_ingest-dlq-triage.html" data-archetype="TRIAGE">
+      <a class="index-row" data-component="index-row" href="/example-media-pipelines/02_ingest-dlq-triage.html" data-archetype="TRIAGE">
         <span class="row-nn">02_</span>
         <span class="row-title">Ingest dlq triage, Q2</span>
         <span class="archetype-chip" data-archetype="TRIAGE">TRIAGE</span>
         <span class="row-mtime">May 14 10:54</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/example-media-pipelines/03_partner-csv-rfc.html" data-archetype="SPEC">
+      <a class="index-row" data-component="index-row" href="/example-media-pipelines/03_partner-csv-rfc.html" data-archetype="SPEC">
         <span class="row-nn">03_</span>
         <span class="row-title">Partner CSV schema RFC</span>
         <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
@@ -443,13 +528,13 @@
         <h2>example-co-ops</h2>
         <span class="project-count">· 2 docs</span>
       </div>
-      <a class="index-row" data-component="index-row" href="/p/example-co-ops/01_traefik-route-migration.html" data-archetype="FLOW">
+      <a class="index-row" data-component="index-row" href="/example-co-ops/01_traefik-route-migration.html" data-archetype="FLOW">
         <span class="row-nn">01_</span>
         <span class="row-title">Traefik route migration plan</span>
         <span class="archetype-chip" data-archetype="FLOW">FLOW</span>
         <span class="row-mtime">May 18 21:12</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/example-co-ops/02_backup-policy-spec.html" data-archetype="SPEC">
+      <a class="index-row" data-component="index-row" href="/example-co-ops/02_backup-policy-spec.html" data-archetype="SPEC">
         <span class="row-nn">02_</span>
         <span class="row-title">Backup policy spec, v2</span>
         <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
@@ -462,19 +547,19 @@
         <h2>agent-deck</h2>
         <span class="project-count">· 3 docs</span>
       </div>
-      <a class="index-row" data-component="index-row" href="/p/agent-deck/01_mcp-attach-lifecycle.html" data-archetype="FLOW">
+      <a class="index-row" data-component="index-row" href="/agent-deck/01_mcp-attach-lifecycle.html" data-archetype="FLOW">
         <span class="row-nn">01_</span>
         <span class="row-title">MCP attach lifecycle diagram</span>
         <span class="archetype-chip" data-archetype="FLOW">FLOW</span>
         <span class="row-mtime">May 19 01:55</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/agent-deck/02_session-forking-rfc.html" data-archetype="SPEC">
+      <a class="index-row" data-component="index-row" href="/agent-deck/02_session-forking-rfc.html" data-archetype="SPEC">
         <span class="row-nn">02_</span>
         <span class="row-title">Session forking RFC</span>
         <span class="archetype-chip" data-archetype="SPEC">SPEC</span>
         <span class="row-mtime">May 18 17:20</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/agent-deck/03_v0.6-launch-retro.html" data-archetype="RETRO">
+      <a class="index-row" data-component="index-row" href="/agent-deck/03_v0.6-launch-retro.html" data-archetype="RETRO">
         <span class="row-nn">03_</span>
         <span class="row-title">v0.6 launch retro</span>
         <span class="archetype-chip" data-archetype="RETRO">RETRO</span>
@@ -487,13 +572,13 @@
         <h2>naisiae-lema-example-insights</h2>
         <span class="project-count">· 2 docs</span>
       </div>
-      <a class="index-row" data-component="index-row" href="/p/naisiae-lema-example-insights/01_cohort-retention.html" data-archetype="EXPLAINER">
+      <a class="index-row" data-component="index-row" href="/naisiae-lema-example-insights/01_cohort-retention.html" data-archetype="EXPLAINER">
         <span class="row-nn">01_</span>
         <span class="row-title">Cohort retention explainer</span>
         <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
         <span class="row-mtime">May 18 13:36</span>
       </a>
-      <a class="index-row" data-component="index-row" href="/p/naisiae-lema-example-insights/02_onboarding-journey-flow.html" data-archetype="FLOW">
+      <a class="index-row" data-component="index-row" href="/naisiae-lema-example-insights/02_onboarding-journey-flow.html" data-archetype="FLOW">
         <span class="row-nn">02_</span>
         <span class="row-title">Onboarding journey flow</span>
         <span class="archetype-chip" data-archetype="FLOW">FLOW</span>
@@ -506,7 +591,7 @@
         <h2>_old_tmp</h2>
         <span class="project-count">· 1 doc</span>
       </div>
-      <a class="index-row" data-component="index-row" href="/p/_old_tmp/01_palette-experiments.html" data-archetype="EXPLAINER">
+      <a class="index-row" data-component="index-row" href="/_old_tmp/01_palette-experiments.html" data-archetype="EXPLAINER">
         <span class="row-nn">01_</span>
         <span class="row-title">Scratch, palette experiments</span>
         <span class="archetype-chip" data-archetype="EXPLAINER">EXPLAINER</span>
@@ -590,6 +675,86 @@
 <pagefind-config bundle-path="/pagefind/"></pagefind-config>
 <pagefind-modal-trigger compact></pagefind-modal-trigger>
 <pagefind-modal></pagefind-modal>
+
+<div class="toast-stack" data-component="toast-stack" aria-live="polite"></div>
+
+<script>
+(function () {
+  const btn = document.querySelector('button.rescan');
+  const stack = document.querySelector('.toast-stack');
+  if (!btn || !stack) return;
+
+  function toast(kind, title, body, ttl) {
+    const el = document.createElement('div');
+    el.className = 'toast kind-' + kind;
+    const t = document.createElement('div'); t.className = 't-title'; t.textContent = title;
+    const b = document.createElement('div'); b.className = 't-body'; b.innerHTML = body;
+    el.appendChild(t); el.appendChild(b);
+    stack.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    if (ttl > 0) {
+      setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 220);
+      }, ttl);
+    }
+    return el;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Wire the visible ⌘K Search button to the hidden pagefind-modal-trigger
+  // web component. Without this, the button is purely decorative — only
+  // Meta+K opens search.
+  const searchBtn = document.querySelector('button.primary[data-component="search-launch"]');
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => {
+      const trig = document.querySelector('pagefind-modal-trigger .pf-trigger-btn');
+      if (trig) trig.click();
+    });
+  }
+
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="ico">⟳</span> Scanning…';
+    try {
+      const res = await fetch('/api/discover', { method: 'POST' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const r = await res.json();
+      const added = r.added || [];
+      if (added.length > 0) {
+        const list = added.map(s => '<code>' + escapeHtml(s) + '</code>').join(', ');
+        toast(
+          'ok',
+          '+' + added.length + ' new ' + (added.length === 1 ? 'repo' : 'repos'),
+          list + '. Rebuilding index…',
+          0
+        );
+        setTimeout(() => location.reload(), 1400);
+      } else {
+        toast(
+          'info',
+          'Up to date',
+          'Scanned <b>' + r.scanned + '</b> ' + (r.scanned === 1 ? 'dir' : 'dirs') + ' in ' + r.durationMs + 'ms · no new repos.',
+          4000
+        );
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    } catch (e) {
+      toast('err', 'Scan failed', escapeHtml(String(e && e.message ? e.message : e)), 6000);
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
