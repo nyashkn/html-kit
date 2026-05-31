@@ -26,3 +26,4 @@ Append a line here whenever a v2-request reveals a wrong-archetype pick or a rec
 - YYYY-MM-DD: <symptom> → <fix>. Picked over <alternative-archetype> because <reason that turned out wrong>.
 
 Read this section before selecting this archetype next time. It's the field manual.
+- 2026-05-25: rendered v1 spec-methodology comparison; KN reframed v2 needing 3-way spec matrix + 4-way exec matrix + state-machine SVG diagram + bridge-schema code-artifact. v1 missed that spec authoring + execution are separate axes. Fix: when user lists 4+ candidate frameworks for "consolidation", check if they answer the SAME question — sometimes the real artifact is a 2x2 (or 2xN) matrix on TWO axes (spec layer × exec layer), not one ranked list.

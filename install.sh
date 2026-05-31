@@ -26,6 +26,9 @@ if [[ "${1:-}" == "--uninstall" ]]; then
   for name in "${SKILLS[@]}"; do
     [[ -L "${CLAUDE_DIR}/${name}" ]] && rm "${CLAUDE_DIR}/${name}" && echo "  removed ${CLAUDE_DIR}/${name}"
     [[ -L "${AGENTS_DIR}/${name}" ]] && rm "${AGENTS_DIR}/${name}" && echo "  removed ${AGENTS_DIR}/${name}"
+    for d in archetypes patterns scripts tokens assets; do
+      [[ -L "${REPO_ROOT}/skill/${name}/${d}" ]] && rm "${REPO_ROOT}/skill/${name}/${d}"
+    done
   done
   echo "✓ uninstalled"
   exit 0
@@ -81,9 +84,33 @@ link_skill() {
   fi
 }
 
+# Repo-root asset dirs the SKILL.md files reference via relative paths
+# (archetypes/, scripts/, etc). The installed skill dir lives at skill/<name>/,
+# two levels below the repo root, so these must be symlinked in beside SKILL.md
+# or the skill can't reach its own archetypes/scripts/tokens at runtime.
+ASSET_DIRS=(archetypes patterns scripts tokens assets)
+
+link_assets() {
+  local name="$1"
+  local skill_dir="${REPO_ROOT}/skill/${name}"
+  for d in "${ASSET_DIRS[@]}"; do
+    [[ -d "${REPO_ROOT}/${d}" ]] || continue          # only link assets that exist
+    local link="${skill_dir}/${d}"
+    if [[ -L "$link" ]]; then
+      continue                                         # already linked
+    elif [[ -e "$link" ]]; then
+      echo "  ! ${skill_dir}/${d} exists and is not a symlink — leaving as-is" >&2
+    else
+      ln -s "../../${d}" "$link"
+      echo "  linked skill/${name}/${d} → ../../${d}"
+    fi
+  done
+}
+
 for name in "${SKILLS[@]}"; do
   echo "→ ${name}"
   link_skill "$name"
+  link_assets "$name"
 done
 
 echo
