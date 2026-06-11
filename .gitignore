@@ -2,7 +2,14 @@ node_modules/
 .DS_Store
 /tmp/
 *.log
-.html-kit/_archive/
 test-results/
 playwright-report/
 .playwright/
+
+# .html-kit/ is the in-repo working dir for rendered artifacts. Ignore all of
+# it (archive, ad-hoc renders, daemon state) EXCEPT the curated demo artifacts
+# that are intentionally committed as examples.
+.html-kit/*
+!.html-kit/.config.json
+!.html-kit/01_v0.3.0-before-after-eval.html
+!.html-kit/02_v0.4.0-interaction-loop.html
