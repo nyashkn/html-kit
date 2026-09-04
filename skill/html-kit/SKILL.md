@@ -103,6 +103,17 @@ Full deliberation, edge cases, and anti-patterns: `references/delegation-rationa
 | triage / kanban board | `triage-board` |
 | feature flag editor | `feature-flag-editor` |
 | editable prompt template w/ live preview | `prompt-tuner` |
+| scan unfamiliar code for what a naive prompt would miss | `blindspot-pass` |
+| teach yourself a domain's vocabulary before prompting in it | `vocab-teacher` |
+| same data, 3-4 wildly different visual directions, react per-element | `design-reaction-review` |
+| throwaway clickable mock of one control/toolbar before real code | `throwaway-mock` |
+| codebase-grounded brainstorm of fixes across an effort spectrum | `intervention-brainstorm` |
+| disambiguate a fuzzy feature via one-question-at-a-time interview | `requirements-interview` |
+| prove you understood a reference impl before porting it | `reference-port-verify` |
+| plan sorted by which decisions will get revisited, not build order | `tweakable-plan` |
+| running deviation log kept during a build, for the next attempt | `implementation-notes` |
+| ship-it pitch that pre-answers reviewer objections | `buy-in-pitch` |
+| merge-readiness report + a must-pass comprehension quiz | `merge-quiz` |
 
 If nothing fits cleanly, `implementation-plan` is the strongest general
 template — it accommodates TLDR strip, sections, callouts, tables, sticky TOC.
