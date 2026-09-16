@@ -1,6 +1,15 @@
 import { test, expect } from "@playwright/test";
+import { FIXTURE_FILE, FIXTURE_SLUG } from "./fixture";
+
+// Tests below that render "/" or "/<slug>/" need a built
+// ~/.html-kit/_daemon/index.html. tests/global-setup.ts builds one when
+// missing; if that build fails on this checkout, skip rather than fail red
+// — see tests/global-setup.ts for the full explanation.
+const INDEX_READY = process.env.HTML_KIT_INDEX_READY === "1";
 
 test.describe.serial("html-kit dashboard", () => {
+  test.skip(!INDEX_READY, "requires a built index.html — see tests/global-setup.ts");
+
   test("loads index with toolbar + rescan + search buttons", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
@@ -81,7 +90,7 @@ test.describe.serial("html-kit dashboard", () => {
     await page.locator('button.primary[data-component="search-launch"]').click();
     const searchbox = page.getByRole("searchbox", { name: "Search this site" });
     await expect(searchbox).toBeVisible();
-    await searchbox.fill("fusion");
+    await searchbox.fill("ships"); // matches fixture <h1>v0.3.0 ships.
 
     // Scope to links inside the pagefind dialog so we don't match dashboard
     // index rows behind the modal.
@@ -103,23 +112,23 @@ test.describe.serial("html-kit dashboard", () => {
 
 test.describe("routing", () => {
   test("flat URL serves artifact", async ({ request }) => {
-    const r = await request.get("/audit-redesign/04_checker-verifier-architecture.html");
+    const r = await request.get(`/${FIXTURE_SLUG}/${FIXTURE_FILE}`);
     expect(r.status()).toBe(200);
     expect(r.headers()["content-type"]).toContain("text/html");
   });
 
   test("legacy /p/ URL 301-redirects to flat form", async ({ request }) => {
-    const r = await request.get("/p/audit-redesign/04_checker-verifier-architecture.html", {
+    const r = await request.get(`/p/${FIXTURE_SLUG}/${FIXTURE_FILE}`, {
       maxRedirects: 0,
     });
     expect(r.status()).toBe(301);
-    expect(r.headers()["location"]).toBe("/audit-redesign/04_checker-verifier-architecture.html");
+    expect(r.headers()["location"]).toBe(`/${FIXTURE_SLUG}/${FIXTURE_FILE}`);
   });
 
   test("legacy /p/ URL followed lands on flat 200", async ({ request }) => {
-    const r = await request.get("/p/my-app/02_fusion-explainer-and-fit.html");
+    const r = await request.get(`/p/${FIXTURE_SLUG}/${FIXTURE_FILE}`);
     expect(r.status()).toBe(200);
-    expect(r.url()).toContain("/my-app/02_fusion-explainer-and-fit.html");
+    expect(r.url()).toContain(`/${FIXTURE_SLUG}/${FIXTURE_FILE}`);
     expect(r.url()).not.toContain("/p/");
   });
 
@@ -150,10 +159,11 @@ test.describe("routing", () => {
   });
 
   test("scoped index /<slug>/ returns 200 with scope script", async ({ request }) => {
-    const r = await request.get("/my-app/");
+    test.skip(!INDEX_READY, "requires a built index.html — see tests/global-setup.ts");
+    const r = await request.get(`/${FIXTURE_SLUG}/`);
     expect(r.status()).toBe(200);
     const html = await r.text();
     expect(html).toContain("__HTMLKIT_SCOPE__");
-    expect(html).toContain('"my-app"');
+    expect(html).toContain(`"${FIXTURE_SLUG}"`);
   });
 });

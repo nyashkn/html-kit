@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Playwright suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Check generated cheatsheet is up to date
+        run: bun run cheatsheet --check
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      # playwright.config.ts targets a singleton daemon on :63839 rather than
+      # a webServer block (the daemon is PID-locked and shouldn't be
+      # respawned per test run), so start and health-check it ourselves.
+      #
+      # Health-check hits /api/repos rather than "/": "/" 404s until
+      # ~/.html-kit/_daemon/index.html has been built (never true yet here —
+      # HOME is the runner's empty home), while /api/repos always returns
+      # 200 JSON regardless of build state. Playwright's globalSetup
+      # (tests/global-setup.ts) registers this repo and builds the index.
+      - name: Start html-kit daemon
+        run: |
+          bun scripts/html-kit-daemon.ts > daemon.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:63839/api/repos > /dev/null; then
+              echo "daemon is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "daemon did not become healthy in time"
+          cat daemon.log
+          exit 1
+
+      - name: Run Playwright suite
+        run: bun run test
+
+  plugin-eval-free:
+    name: Plugin eval (free graders)
+    needs: []
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Claude Code CLI
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run free-grader eval cases
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude plugin eval . \
+            --tag free \
+            --trust-plugin \
+            --scaffold \
+            --allow-tools Bash Write Edit \
+            --ablation none \
+            --model claude-sonnet-5 \
+            --threshold 0.8 \
+            --max-cost-usd 5 \
+            --no-publish \
+            --json evals/results/free-result.json
+
+  plugin-eval-paid:
+    name: Plugin eval (llm/baseline graders)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Claude Code CLI
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run paid-grader eval cases
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude plugin eval . \
+            --tag paid \
+            --trust-plugin \
+            --allow-tools Bash Write Edit \
+            --model claude-sonnet-5 \
+            --judge-model claude-haiku-4-5 \
+            --threshold 0.8 \
+            --max-cost-usd 15 \
+            --no-publish \
+            --json evals/results/paid-result.json

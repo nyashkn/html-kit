@@ -1,16 +1,14 @@
 import { test, expect } from "@playwright/test";
 import { unlinkSync, existsSync, readFileSync } from "fs";
-import { homedir } from "os";
-import { join } from "path";
+import { FIXTURE_ARTIFACT_PATH, FIXTURE_FILE, FIXTURE_SLUG } from "./fixture";
 
-// We exercise the annotation API against a real registered artifact path.
-// Each test cleans up its own .annotations.jsonl after running so runs are
-// isolated and don't leak state into the user's repo.
+// We exercise the annotation API against a real registered artifact path —
+// a committed in-repo demo artifact (registered with the daemon by
+// tests/global-setup.ts), never a personal homedir path. Each test cleans
+// up its own .annotations.jsonl after running so runs are isolated and
+// don't leak state into the repo.
 
-const ARTIFACT = join(
-  homedir(),
-  "code/my-app/.html-kit/02_fusion-explainer-and-fit.html",
-);
+const ARTIFACT = FIXTURE_ARTIFACT_PATH;
 const ANN_FILE = ARTIFACT + ".annotations.jsonl";
 
 function cleanup() {
@@ -31,7 +29,7 @@ test.describe.serial("annotation API", () => {
   });
 
   test("artifact pages get the annotation-strip script injected", async ({ request }) => {
-    const r = await request.get("/my-app/02_fusion-explainer-and-fit.html");
+    const r = await request.get(`/${FIXTURE_SLUG}/${FIXTURE_FILE}`);
     expect(r.status()).toBe(200);
     const html = await r.text();
     expect(html).toMatch(/<script[^>]+annotation-strip\.js[^>]*>/);
