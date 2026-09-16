@@ -129,7 +129,7 @@ html-kit/
    | drain | `tool_order`: Skill html-kit-drain, then Bash annotate-read |
    | baseline | `baseline` vs no-plugin on a dashboard render |
 
-3. `.github/workflows/ci.yml`: Playwright suite + `claude plugin eval --threshold 0.8` (needs an `ANTHROPIC_API_KEY` secret; run the `llm` and `baseline` graders on push to `main` only, to cap cost).
+3. `.github/workflows/ci.yml`: Playwright suite + `claude plugin eval --threshold 0.8` (needs a `CLAUDE_CODE_OAUTH_TOKEN` secret from `claude setup-token`; run the `llm` and `baseline` graders on push to `main` only, to cap cost).
 
 ### P4 — Distribution + ecosystem (≈2 h, optional)
 

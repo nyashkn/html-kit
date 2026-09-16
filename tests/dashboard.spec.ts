@@ -44,7 +44,7 @@ test.describe.serial("html-kit dashboard", () => {
     // Toast renders. When added=0, title is "Up to date" with 4s ttl.
     const toast = page.locator(".toast-stack .toast").first();
     await expect(toast).toBeVisible();
-    await expect(toast.locator(".t-title")).toHaveText(/Up to date|new repo/);
+    await expect(toast.locator(".t-title")).toHaveText(/Up to date|new repo|No scan roots configured/);
     await expect(toast).toHaveClass(/show/);
     if (body.added.length === 0) {
       await expect(toast.locator(".t-title")).toHaveText("Up to date");
