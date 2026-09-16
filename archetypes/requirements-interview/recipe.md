@@ -1,3 +1,8 @@
+---
+name: requirements-interview
+when: use when a feature is ambiguous enough that a plan would just encode guesses: interview one question at a time
+---
+
 # requirements-interview
 
 **Use when:** a feature or change is ambiguous enough that a plan would just encode guesses — interview the user one question at a time, ordered by architectural blast radius (biggest-consequence decisions first), then hand back a decisions table and a ready-to-paste implementation prompt.

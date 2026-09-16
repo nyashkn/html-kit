@@ -1,3 +1,8 @@
+---
+name: exploration-visual-designs
+when: use when presenting 2-N visual/layout/palette directions for live reaction, not imagination
+---
+
 # exploration-visual-designs
 
 **Use when:** presenting 2-N visual/layout/palette directions for live reaction (not imagination).

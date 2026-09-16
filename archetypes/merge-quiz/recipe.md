@@ -1,3 +1,8 @@
+---
+name: merge-quiz
+when: use when verifying you understood a large diff before merging: a readiness report plus a must-pass quiz
+---
+
 # merge-quiz
 
 **Use when:** verifying you actually understood a large diff before merging it — a merge-readiness report (before/after mental model, non-obvious behaviors introduced) paired with a must-pass quiz whose wrong answers link straight back to the section that explains the right one.

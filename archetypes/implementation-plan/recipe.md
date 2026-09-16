@@ -1,3 +1,8 @@
+---
+name: implementation-plan
+when: use when handing off a multi-step plan with milestones, a data-flow diagram, mockups, and a risk table
+---
+
 # implementation-plan
 
 **Use when:** handing off a multi-step plan — milestones on a timeline, data-flow diagram, inline mockups, risky code, risk table. The strongest general-purpose template.
@@ -20,10 +25,10 @@
 - 2026-05-13: use <details class="deep"> for genuinely deep optional detail only (log excerpts, edge cases). Never wrap the main narrative in accordions — readers won't open them.
 - 2026-05-13: artifacts must be fully self-contained. Inline <style>, inline SVG, inline JS. No CDN links, no @import, no external fonts (system stack is the brand).
 - 2026-05-13: never propose edits to exemplar.html — it's the reference. Adapt by rendering a NEW file.
+- 2026-05-25: rendered v1 spec-methodology comparison; the user reframed v2 needing 3-way spec matrix + 4-way exec matrix + state-machine SVG diagram + bridge-schema code-artifact. v1 missed that spec authoring + execution are separate axes. Fix: when user lists 4+ candidate frameworks for "consolidation", check if they answer the SAME question — sometimes the real artifact is a 2x2 (or 2xN) matrix on TWO axes (spec layer × exec layer), not one ranked list.
 
 Append a line here whenever a v2-request reveals a wrong-archetype pick or a recurring render failure for this archetype. Format:
 
 - YYYY-MM-DD: <symptom> → <fix>. Picked over <alternative-archetype> because <reason that turned out wrong>.
 
 Read this section before selecting this archetype next time. It's the field manual.
-- 2026-05-25: rendered v1 spec-methodology comparison; KN reframed v2 needing 3-way spec matrix + 4-way exec matrix + state-machine SVG diagram + bridge-schema code-artifact. v1 missed that spec authoring + execution are separate axes. Fix: when user lists 4+ candidate frameworks for "consolidation", check if they answer the SAME question — sometimes the real artifact is a 2x2 (or 2xN) matrix on TWO axes (spec layer × exec layer), not one ranked list.

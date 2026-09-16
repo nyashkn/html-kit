@@ -1,3 +1,8 @@
+---
+name: pr-review
+when: use when rendering a PR review in reviewer voice: diff with margin notes, severity tags, jump links
+---
+
 # annotated-pull-request
 
 **Use when:** rendering a PR review (reviewer voice) — diff with margin notes, severity tags, jump links. Reader is the PR author or another reviewer.

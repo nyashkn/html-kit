@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Playwright suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Check generated cheatsheet is up to date
+        run: bun run cheatsheet --check
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      # playwright.config.ts targets a singleton daemon on :63839 rather than
+      # a webServer block (the daemon is PID-locked and shouldn't be
+      # respawned per test run), so start and health-check it ourselves.
+      #
+      # Health-check hits /api/repos rather than "/": "/" 404s until
+      # ~/.html-kit/_daemon/index.html has been built (never true yet here —
+      # HOME is the runner's empty home), while /api/repos always returns
+      # 200 JSON regardless of build state. Playwright's globalSetup
+      # (tests/global-setup.ts) registers this repo and builds the index.
+      - name: Start html-kit daemon
+        run: |
+          bun scripts/html-kit-daemon.ts > daemon.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:63839/api/repos > /dev/null; then
+              echo "daemon is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "daemon did not become healthy in time"
+          cat daemon.log
+          exit 1
+
+      - name: Run Playwright suite
+        run: bun run test
+
+  plugin-eval-free:
+    name: Plugin eval (free graders)
+    needs: []
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install sandbox backend (bubblewrap + socat)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat
+          if [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = "1" ]; then
+            printf 'abi <abi/4.0>,\ninclude <tunables/global>\nprofile bwrap /usr/bin/bwrap flags=(unconfined) {\n  userns,\n  include if exists <local/bwrap>\n}\n' | sudo tee /etc/apparmor.d/bwrap >/dev/null
+            sudo systemctl reload apparmor
+          fi
+
+      - name: Install Claude Code CLI
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash -s 2.1.273
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run free-grader eval cases
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          claude plugin eval . \
+            --tag free \
+            --trust-plugin \
+            --scaffold \
+            --allow-tools Bash Write Edit \
+            --ablation none \
+            --model claude-haiku-4-5 \
+            --threshold 0.8 \
+            --max-cost-usd 5 \
+            --no-publish \
+            --json evals/results/free-result.json
+
+      - name: Summarize free eval results
+        if: always()
+        run: |
+          jq -r '.cases[] | .name as $n | .arms.with[] | "\($n): score=\(.score) error=\(.error // "none")", (.graders[]? | "   \(.name): \(.passed)")' evals/results/free-result.json || true
+
+      - name: Upload free eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-free-report
+          path: evals/results/
+          if-no-files-found: ignore
+
+  plugin-eval-paid:
+    name: Plugin eval (llm/baseline graders)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install sandbox backend (bubblewrap + socat)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat
+          if [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = "1" ]; then
+            printf 'abi <abi/4.0>,\ninclude <tunables/global>\nprofile bwrap /usr/bin/bwrap flags=(unconfined) {\n  userns,\n  include if exists <local/bwrap>\n}\n' | sudo tee /etc/apparmor.d/bwrap >/dev/null
+            sudo systemctl reload apparmor
+          fi
+
+      - name: Install Claude Code CLI
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash -s 2.1.273
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run paid-grader eval cases
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          claude plugin eval . \
+            --tag paid \
+            --trust-plugin \
+            --allow-tools Bash Write Edit \
+            --model claude-haiku-4-5 \
+            --judge-model claude-haiku-4-5 \
+            --threshold 0.8 \
+            --max-cost-usd 15 \
+            --no-publish \
+            --json evals/results/paid-result.json
+
+      - name: Summarize paid eval results
+        if: always()
+        run: |
+          jq -r '.cases[] | .name as $n | .arms.with[] | "\($n): score=\(.score) error=\(.error // "none")", (.graders[]? | "   \(.name): \(.passed)")' evals/results/paid-result.json || true
+
+      - name: Upload paid eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-paid-report
+          path: evals/results/
+          if-no-files-found: ignore

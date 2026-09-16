@@ -1,3 +1,8 @@
+---
+name: vocab-teacher
+when: use when you need to learn an unfamiliar domain's vocabulary well enough to prompt precisely in it
+---
+
 # vocab-teacher
 
 **Use when:** you need to learn an unfamiliar domain's vocabulary well enough to prompt precisely in it — pairs a vocabulary ladder with a live interactive demo so terms stop being abstract before you ask for the real work.

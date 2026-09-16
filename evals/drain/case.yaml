@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: drain
+description: >
+  "Drain my notes" on an artifact with pending .annotations.jsonl should
+  route to html-kit-drain, then act on the annotation content. fixture.sh
+  scaffolds artifact.html + artifact.html.annotations.jsonl straight into
+  the workspace (not a fixtures/ subdir — add_dirs granted read access to
+  the case directory, not the run's cwd, so a path like "fixtures/x.html"
+  in the prompt never resolved). The daemon at :63839 is not running in
+  the eval sandbox (no localhost network), so the grader also accepts the
+  SKILL.md-documented offline fallback of reading the .jsonl directly with
+  Read, not only the scripts/annotate-read.ts helper.
+context:
+  scaffold_script: fixture.sh

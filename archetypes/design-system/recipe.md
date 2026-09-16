@@ -1,3 +1,8 @@
+---
+name: design-system
+when: use when rendering design tokens (colors, type scale, spacing) from a repo as live, copy-pasteable swatches
+---
+
 # design-system
 
 **Use when:** rendering tokens (colors, type scale, spacing) pulled from a repo as live, copy-pasteable swatches.

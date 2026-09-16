@@ -1,0 +1,15 @@
+{
+  "name": "html-kit",
+  "description": "Self-hosted marketplace for the html-kit plugin.",
+  "owner": {
+    "name": "KN",
+    "url": "https://github.com/nyashkn"
+  },
+  "plugins": [
+    {
+      "name": "html-kit",
+      "source": "./",
+      "description": "Turn any plan, spec, decision doc, synth, or dataset into a polished, self-contained single-page HTML artifact, styled in the Anthropic palette, with one /html-kit command inside Claude Code."
+    }
+  ]
+}

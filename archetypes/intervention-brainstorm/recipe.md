@@ -1,3 +1,8 @@
+---
+name: intervention-brainstorm
+when: use when brainstorming candidate fixes for a named problem, grounded in the actual codebase across an effort spectrum
+---
+
 # intervention-brainstorm
 
 **Use when:** brainstorming candidate interventions/fixes for a named problem (e.g. churn) and the ideas need to be grounded in the ACTUAL codebase, spread across a real effort spectrum, and reviewable with lightweight resonate checkboxes.

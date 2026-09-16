@@ -1,3 +1,8 @@
+---
+name: animation-sandbox
+when: use when tuning a single transition or animation in isolation with duration/easing sliders and a live preview
+---
+
 # animation-sandbox
 
 **Use when:** tuning a single transition/animation in isolation — sliders for duration/easing, live preview.

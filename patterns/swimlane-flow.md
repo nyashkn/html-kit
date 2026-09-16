@@ -134,4 +134,4 @@ svg.flow .blast-label { font-size: 8.5px; fill: var(--rose); font-weight: 700; }
 
 ## Ancestry
 
-Promoted 2026-05-14 by KN. Source artifact: an internal exploration doc (lifecycle flow). User feedback: wants reusable for example-insights synthesis (intervention loop swimlane: baseline → side-effect → checkpoint → delta, lane split = analyst-driven vs side-effect-driven) plus future ops journeys. Original color tokens (`--peru`, `--leaf`, `--slate-dark`) rewritten to Anthropic palette (`--clay`, `--olive`, `--slate`).
+Promoted 2026-05-14 by KN. Source artifact: an internal exploration doc (lifecycle flow). User feedback: wants reusable for a downstream project's synthesis workflow (intervention loop swimlane: baseline → side-effect → checkpoint → delta, lane split = analyst-driven vs side-effect-driven) plus future ops journeys. Original color tokens (project-specific accent, secondary, and dark-slate tokens) rewritten to Anthropic palette (`--clay`, `--olive`, `--slate`).

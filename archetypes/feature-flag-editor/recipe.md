@@ -1,3 +1,8 @@
+---
+name: feature-flag-editor
+when: use when editing a feature-flag config interactively with grouped toggles, dependency warnings, copy-diff export
+---
+
 # feature-flag-editor
 
 **Use when:** editing a feature-flag config interactively — toggles grouped by area, dependency warnings, copy-diff export.

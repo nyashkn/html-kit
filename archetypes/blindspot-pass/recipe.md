@@ -1,3 +1,8 @@
+---
+name: blindspot-pass
+when: use when scanning unfamiliar or unowned code for the unknown unknowns before writing an implementation prompt
+---
+
 # blindspot-pass
 
 **Use when:** before writing an implementation prompt against unfamiliar or unowned code — get Claude to scan the territory first and report the unknown unknowns, so the real prompt doesn't walk in blind.

@@ -13,3 +13,4 @@ playwright-report/
 !.html-kit/.config.json
 !.html-kit/01_v0.3.0-before-after-eval.html
 !.html-kit/02_v0.4.0-interaction-loop.html
+.html-kit/_archive/

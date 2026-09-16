@@ -29,7 +29,7 @@ const DAEMON_DIR = join(KIT_HOME, "_daemon");
 const CONFIG_FILE = join(DAEMON_DIR, "config.json");
 const REPOS_FILE = join(DAEMON_DIR, "repos.json");
 
-const DEFAULT_SCAN_ROOTS = [join(HOME, "code")];
+const DEFAULT_SCAN_ROOTS: string[] = [];
 const DEFAULT_MAX_DEPTH = 6;
 const SKIP_NAMES = new Set([
   "node_modules", ".git", ".html-kit", "_archive",
@@ -44,6 +44,7 @@ export type DiscoverResult = {
   scanned: number;          // total .html-kit dirs found on disk
   durationMs: number;
   scanRoots: string[];
+  unconfigured?: true;      // set when no scanRoots are configured at all
 };
 
 type Config = { scanRoots: string[]; maxDepth: number };
@@ -110,7 +111,7 @@ function findHtmlKitDirs(root: string, maxDepth: number): string[] {
 }
 
 // Canonical slug = basename of repo dir. Matches existing short-slug convention
-// already in repos.json (my-app, html-kit, example-insights, etc.).
+// already in repos.json (e.g. my-app, html-kit).
 function slugFor(repoDir: string): string {
   return basename(repoDir);
 }
@@ -123,6 +124,20 @@ export async function discoverRoots(
 
   const t0 = Date.now();
   const cfg = loadConfig();
+
+  // If no scanRoots configured, emit hint and return empty result cleanly
+  if (cfg.scanRoots.length === 0) {
+    process.stderr.write("[discover] no scanRoots configured; set them in ~/.html-kit/_daemon/config.json\n");
+    return {
+      added: [],
+      existing: 0,
+      scanned: 0,
+      durationMs: 0,
+      scanRoots: [],
+      unconfigured: true,
+    };
+  }
+
   const repos = loadRepos();
   const existingDirs = new Set(Object.values(repos).map(p => resolve(p)));
   const existingCount = Object.keys(repos).length;

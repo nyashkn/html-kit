@@ -1,3 +1,8 @@
+---
+name: prompt-tuner
+when: use when iterating on a prompt template with variable slots and live-rendering sample inputs
+---
+
 # prompt-tuner
 
 **Use when:** iterating on a prompt template with variable slots — editable template on left, N sample inputs re-rendering live on right.

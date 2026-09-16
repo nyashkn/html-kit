@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: self-contained
+description: >
+  A rendered html-kit artifact should have no external script/stylesheet
+  dependencies. Scaffolds a bare git repo (same as evals/route-plan) so
+  resolve-out-path.ts's git-root detection resolves in-repo and writes
+  into .html-kit/, matching a real user repo instead of the CI runner's
+  temp HOME. Without this, a run that writes nothing still scored 1.0 —
+  the only grader was a not_contains regex with nothing to trip it.
+context:
+  scaffold_script: fixture.sh

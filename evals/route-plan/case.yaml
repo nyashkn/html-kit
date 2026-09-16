@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: route-plan
+description: >
+  A plan-rendering request should route to the html-kit skill and produce a
+  self-contained .html-kit/*.html artifact. Scaffolds a bare git repo so
+  resolve-out-path.ts's git-root detection resolves in-repo (matches how the
+  skill behaves for a real user repo, not the CI runner's temp HOME).
+context:
+  scaffold_script: fixture.sh

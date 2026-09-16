@@ -14,10 +14,10 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENTS_DIR="${HOME}/.agents/skills"
 CLAUDE_DIR="${HOME}/.claude/skills"
 
-# All skills under skill/ get installed. Add new sub-skills by dropping a
-# directory under skill/ and re-running ./install.sh — no edits needed here.
+# All skills under skills/ get installed. Add new sub-skills by dropping a
+# directory under skills/ and re-running ./install.sh — no edits needed here.
 SKILLS=()
-for dir in "${REPO_ROOT}"/skill/*/; do
+for dir in "${REPO_ROOT}"/skills/*/; do
   [[ -d "$dir" && -f "$dir/SKILL.md" ]] && SKILLS+=("$(basename "$dir")")
 done
 
@@ -27,7 +27,7 @@ if [[ "${1:-}" == "--uninstall" ]]; then
     [[ -L "${CLAUDE_DIR}/${name}" ]] && rm "${CLAUDE_DIR}/${name}" && echo "  removed ${CLAUDE_DIR}/${name}"
     [[ -L "${AGENTS_DIR}/${name}" ]] && rm "${AGENTS_DIR}/${name}" && echo "  removed ${AGENTS_DIR}/${name}"
     for d in archetypes patterns scripts tokens assets; do
-      [[ -L "${REPO_ROOT}/skill/${name}/${d}" ]] && rm "${REPO_ROOT}/skill/${name}/${d}"
+      [[ -L "${REPO_ROOT}/skills/${name}/${d}" ]] && rm "${REPO_ROOT}/skills/${name}/${d}"
     done
   done
   echo "✓ uninstalled"
@@ -35,7 +35,7 @@ if [[ "${1:-}" == "--uninstall" ]]; then
 fi
 
 if [[ ${#SKILLS[@]} -eq 0 ]]; then
-  echo "✗ no skills found under ${REPO_ROOT}/skill/" >&2
+  echo "✗ no skills found under ${REPO_ROOT}/skills/" >&2
   exit 1
 fi
 
@@ -43,7 +43,7 @@ mkdir -p "$AGENTS_DIR" "$CLAUDE_DIR"
 
 link_skill() {
   local name="$1"
-  local source="${REPO_ROOT}/skill/${name}"
+  local source="${REPO_ROOT}/skills/${name}"
   local agents_link="${AGENTS_DIR}/${name}"
   local claude_link="${CLAUDE_DIR}/${name}"
 
@@ -85,14 +85,14 @@ link_skill() {
 }
 
 # Repo-root asset dirs the SKILL.md files reference via relative paths
-# (archetypes/, scripts/, etc). The installed skill dir lives at skill/<name>/,
+# (archetypes/, scripts/, etc). The installed skill dir lives at skills/<name>/,
 # two levels below the repo root, so these must be symlinked in beside SKILL.md
 # or the skill can't reach its own archetypes/scripts/tokens at runtime.
 ASSET_DIRS=(archetypes patterns scripts tokens assets)
 
 link_assets() {
   local name="$1"
-  local skill_dir="${REPO_ROOT}/skill/${name}"
+  local skill_dir="${REPO_ROOT}/skills/${name}"
   for d in "${ASSET_DIRS[@]}"; do
     [[ -d "${REPO_ROOT}/${d}" ]] || continue          # only link assets that exist
     local link="${skill_dir}/${d}"
@@ -102,7 +102,7 @@ link_assets() {
       echo "  ! ${skill_dir}/${d} exists and is not a symlink — leaving as-is" >&2
     else
       ln -s "../../${d}" "$link"
-      echo "  linked skill/${name}/${d} → ../../${d}"
+      echo "  linked skills/${name}/${d} → ../../${d}"
     fi
   done
 }

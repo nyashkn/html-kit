@@ -1,3 +1,8 @@
+---
+name: design-reaction-review
+when: use when the reviewer needs to react per-element across 3-4 wildly different visual directions of the same data
+---
+
 # design-reaction-review
 
 **Use when:** near-identical to `exploration-visual-designs`, but the reviewer needs to react to specific elements inline instead of picking a whole direction — renders the SAME data/queue in 3-4 wildly different visual languages (ops console, editorial, kanban, terminal, ...) with per-element steal/skip chips that assemble a written reply as you click.

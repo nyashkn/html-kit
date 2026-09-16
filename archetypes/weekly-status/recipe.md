@@ -1,3 +1,8 @@
+---
+name: weekly-status
+when: use when writing a recurring engineering/team status: what shipped, what slipped, formatted for skimming
+---
+
 # weekly-status
 
 **Use when:** a recurring engineering/team status — what shipped, what slipped, a small chart, formatted for Monday-morning skimming.
