@@ -3,7 +3,7 @@
 // captures agent annotations, watches .html-kit/ dirs and rebuilds index on change.
 // Singleton on port 63839; PID lock at ~/.html-kit/_daemon/.pid. Errors to stderr.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, statSync, watch, openSync, readSync, closeSync, appendFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, statSync, watch, openSync, readSync, closeSync, appendFileSync, renameSync, readdirSync } from "fs";
 import { join, resolve, sep } from "path";
 import { homedir } from "os";
 import { discoverRoots } from "./discover-roots";
@@ -18,6 +18,8 @@ const INDEX_HTML = join(DAEMON_DIR, "index.html");
 const PAGEFIND_DIR = join(DAEMON_DIR, "pagefind");
 const PATTERN_FILE = join(import.meta.dir, "..", "patterns", "annotation-strip.md");
 const OVERRIDES_FILE = join(import.meta.dir, "..", "assets", "pagefind-overrides.css");
+const OUT_LOG = join(DAEMON_DIR, "out.log");
+const LOG_MAX_BYTES = 5 * 1024 * 1024; // 5 MB cap before rotation
 
 // Reserved URL prefixes that must NEVER be treated as slug routes. Order
 // matters only for the slug-name-collision rule in build-index.ts; here it
@@ -133,37 +135,82 @@ function broadcastSSE(event: string, data: string) {
 }
 
 // --- filewatch + index rebuild -------------------------------------------
+// DAEMON_DIR is the directory build-index writes into (staging/, pagefind/,
+// index.html). Watching it would cause every rebuild to trigger another rebuild
+// (infinite loop). We filter it out from watch callbacks and also exclude it
+// from the watched set entirely since KIT_HOME watch is recursive.
+const DAEMON_DIR_SEP = DAEMON_DIR + sep; // e.g. ~/.html-kit/_daemon/
+
 let rebuildTimer: ReturnType<typeof setTimeout> | null = null;
-function scheduleRebuild() {
+let buildInFlight = false; // guard: skip-if-running to prevent overlapping builds
+
+function scheduleRebuild(triggerPath?: string) {
+  // Ignore events originating inside the daemon's own output dir.
+  if (triggerPath && (triggerPath === DAEMON_DIR || triggerPath.startsWith(DAEMON_DIR_SEP))) {
+    return;
+  }
   if (rebuildTimer) clearTimeout(rebuildTimer);
   rebuildTimer = setTimeout(() => {
     rebuildTimer = null;
+    if (buildInFlight) {
+      log("[html-kit-daemon] build already in flight, skipping duplicate trigger");
+      return;
+    }
     const buildScript = join(import.meta.dir, "build-index.ts");
     if (!existsSync(buildScript)) {
       log("[html-kit-daemon] build-index.ts not found, skipping rebuild");
       broadcastSSE("index:updated", JSON.stringify({ ts: Date.now(), skipped: true }));
       return;
     }
-    const proc = Bun.spawn(["bun", buildScript], { stdout: "inherit", stderr: "inherit" });
+    buildInFlight = true;
+    const proc = Bun.spawn(["bun", buildScript, "--incremental"], { stdout: "inherit", stderr: "inherit" });
     proc.exited.then(() => {
+      buildInFlight = false;
       broadcastSSE("index:updated", JSON.stringify({ ts: Date.now() }));
-    });
-  }, 500);
+    }).catch(() => { buildInFlight = false; });
+  }, 1500); // 1.5s trailing debounce — coalesces rapid bursts
 }
+
+// Slug dirs to skip inside KIT_HOME when enumerating per-slug watchers.
+const KIT_HOME_SKIP = new Set(["_daemon", "_index", "_old_tmp", "_archive"]);
 
 function setupWatchers(repos: ReposMap) {
   const dirs = new Set<string>();
-  if (existsSync(KIT_HOME)) dirs.add(KIT_HOME);
+
+  // IMPORTANT: do NOT watch KIT_HOME recursively. macOS FSEvents fires spurious
+  // parent-dir events every ~1.5s on a recursive watcher which would re-trigger
+  // builds continuously even when no files change. Instead, watch each slug
+  // subdir inside KIT_HOME individually (non-recursive is enough: artifacts are
+  // flat *.html files directly inside each slug dir).
+  if (existsSync(KIT_HOME)) {
+    try {
+      for (const entry of readdirSync(KIT_HOME)) {
+        if (KIT_HOME_SKIP.has(entry) || entry.startsWith(".")) continue;
+        const slugDir = join(KIT_HOME, entry);
+        try { if (statSync(slugDir).isDirectory()) dirs.add(slugDir); } catch { /* skip */ }
+      }
+    } catch { /* ignore KIT_HOME read errors */ }
+  }
+
+  // Watched repo dirs from repos.json. These contain user artifact .html-kit/ subdirs.
   for (const dir of Object.values(repos)) {
     if (existsSync(dir)) dirs.add(dir);
   }
+
   for (const dir of dirs) {
     try {
-      watch(dir, { recursive: true }, () => scheduleRebuild());
+      watch(dir, { recursive: true }, (_event, filename) => {
+        // Build an absolute path from the watch root + filename to filter daemon dir.
+        const abs = filename ? resolve(dir, filename) : dir;
+        scheduleRebuild(abs);
+      });
     } catch (e) {
       log(`[html-kit-daemon] watch failed for ${dir}: ${String(e)}`);
     }
   }
+  // NOTE: new slug dirs added to KIT_HOME after startup won't be auto-watched.
+  // POST /api/repos and POST /api/discover already arm watchers for new dirs on
+  // demand, so this only affects dirs created outside those APIs. Acceptable.
   return dirs.size;
 }
 
@@ -445,9 +492,25 @@ function serveArtifact(slug: string, tail: string, repos: ReposMap): Response {
   });
 }
 
+// --- log rotation ---------------------------------------------------------
+// Rotate out.log on startup (daemon writes stderr there via shell redirect).
+// Keep one prior generation (.1). Also truncate daemon.log if oversized.
+function rotateLogs() {
+  for (const logPath of [OUT_LOG, join(DAEMON_DIR, "daemon.log")]) {
+    try {
+      if (!existsSync(logPath)) continue;
+      if (statSync(logPath).size < LOG_MAX_BYTES) continue;
+      const prev = logPath + ".1";
+      try { if (existsSync(prev)) unlinkSync(prev); } catch { /* ignore */ }
+      try { renameSync(logPath, prev); } catch { /* ignore */ }
+    } catch { /* never crash the daemon over log rotation */ }
+  }
+}
+
 // --- main -----------------------------------------------------------------
 async function main() {
   acquireLock();
+  rotateLogs();
 
   const cleanup = () => { releaseLock(); process.exit(0); };
   process.on("SIGINT", cleanup);

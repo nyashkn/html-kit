@@ -178,6 +178,45 @@ function stageFile(srcPath: string, project: string, args: Args): string {
   return stagedPath;
 }
 
+// --- clean orphaned staging entries ---------------------------------------
+// Remove staged files whose source artifact no longer exists on disk.
+// This prevents ENOENT noise in pagefind and stale index entries.
+function cleanOrphanedStaging(repos: ReposMap) {
+  if (!existsSync(STAGING_DIR)) return;
+  let projectDirs: string[];
+  try { projectDirs = readdirSync(STAGING_DIR); } catch { return; }
+
+  // Build a set of known source roots so we can check if a source still exists.
+  const sourceRoots: { project: string; dir: string }[] = [];
+  if (existsSync(KIT_HOME)) {
+    for (const entry of readdirSync(KIT_HOME)) {
+      if (entry === "_daemon" || entry.startsWith("_")) continue;
+      sourceRoots.push({ project: entry, dir: join(KIT_HOME, entry) });
+    }
+  }
+  for (const [slug, repoDir] of Object.entries(repos)) {
+    sourceRoots.push({ project: slug, dir: join(repoDir, ".html-kit") });
+  }
+  const sourceByProject = new Map(sourceRoots.map(r => [r.project, r.dir]));
+
+  for (const project of projectDirs) {
+    const stagingProjectDir = join(STAGING_DIR, project);
+    let files: string[];
+    try { files = readdirSync(stagingProjectDir); } catch { continue; }
+
+    const srcDir = sourceByProject.get(project);
+    for (const file of files) {
+      // If no source dir for this project, or source file is gone → remove staged copy.
+      const srcPath = srcDir ? join(srcDir, file) : null;
+      if (!srcPath || !existsSync(srcPath)) {
+        const orphan = join(stagingProjectDir, file);
+        try { unlinkSync(orphan); process.stderr.write(`[build-index] cleaned orphan: ${project}/${file}\n`); }
+        catch { /* ignore */ }
+      }
+    }
+  }
+}
+
 // --- collect every artifact across HOME + repos --------------------------
 function collectArtifacts(repos: ReposMap, args: Args): Artifact[] {
   const out: Artifact[] = [];
@@ -188,9 +227,17 @@ function collectArtifacts(repos: ReposMap, args: Args): Artifact[] {
     if (seen.has(abs)) return;
     seen.add(abs);
     let st;
-    try { st = statSync(abs); } catch { return; }
+    try { st = statSync(abs); } catch {
+      process.stderr.write(`[build-index] warn: source gone, skipping ${abs}\n`);
+      return;
+    }
     if (!st.isFile()) return;
-    const stagedPath = stageFile(abs, project, args);
+    let stagedPath: string;
+    try { stagedPath = stageFile(abs, project, args); }
+    catch (e) {
+      process.stderr.write(`[build-index] warn: stage failed for ${abs}: ${String(e)}\n`);
+      return;
+    }
     let html = "";
     try { html = readFileSync(stagedPath, "utf8"); } catch { /* keep empty */ }
     const filename = basename(abs);
@@ -387,6 +434,7 @@ async function main() {
   }
 
   const repos = loadRepos();
+  cleanOrphanedStaging(repos);
   const artifacts = collectArtifacts(repos, args);
 
   const projectSet = new Set(artifacts.map(a => a.project));
