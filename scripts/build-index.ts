@@ -37,9 +37,10 @@ const STAGING_DIR = join(DAEMON_DIR, "staging");
 const PAGEFIND_DIR = join(DAEMON_DIR, "pagefind");
 const REPOS_FILE = join(DAEMON_DIR, "repos.json");
 const INDEX_HTML = join(DAEMON_DIR, "index.html");
-const TEMPLATE = resolve(import.meta.dir, "..", ".html-kit", "03_v0.4.0-index-mockup.html");
+const TEMPLATE = join(import.meta.dir, "..", "assets", "index-template.html");
 
-const SKIP_DIRS = new Set(["_daemon", "_index", "_old_tmp", "_archive"]);
+// Any "_"-prefixed dir under ~/.html-kit is daemon/skill-internal state, not a
+// project (e.g. _daemon, _archive, and skill-written _gotchas / _patterns).
 const STAGED_MARKER = "<!-- html-kit:staged -->";
 
 type Args = { incremental: boolean; verbose: boolean };
@@ -258,7 +259,7 @@ function collectArtifacts(repos: ReposMap, args: Args): Artifact[] {
   // ~/.html-kit/<slug>/*.html
   if (existsSync(KIT_HOME)) {
     for (const entry of readdirSync(KIT_HOME)) {
-      if (SKIP_DIRS.has(entry)) continue;
+      if (entry.startsWith("_")) continue;
       const dir = join(KIT_HOME, entry);
       let st;
       try { st = statSync(dir); } catch { continue; }
@@ -309,19 +310,22 @@ function renderRow(a: Artifact, project: string): string {
 }
 
 function prettyProjectLabel(project: string, repos: ReposMap): { primary: string; secondary: string } {
-  // Prefer registered repo path: primary = basename(dir), secondary = path under common dev root
+  // Prefer registered repo path: primary = basename(dir), secondary = path relative to HOME
   const dir = repos[project];
   if (dir) {
     const segments = dir.split("/").filter(Boolean);
     const primary = segments[segments.length - 1] || project;
-    const devRoot = "code";
-    const idx = dir.indexOf(devRoot);
-    const secondary = idx >= 0 ? dir.slice(idx + devRoot.length + 1) : dir;
+    // Strip HOME prefix to get relative path; if dir is outside HOME, use full dir
+    const secondary = dir.startsWith(HOME + "/")
+      ? dir.slice((HOME + "/").length)
+      : dir;
     return { primary, secondary };
   }
-  // Fallback for ~/.html-kit/<slug>/ entries (slug = cwd path-mangled, slashes → '-')
-  // Strip common prefix; show remainder as secondary, last segment as primary.
-  const stripped = project.replace(/^Users-[^-]+-code-/, "");
+  // Fallback for ~/.html-kit/<slug>/ entries (slug = cwd path-mangled, slashes → '-',
+  // leading dash stripped — see resolve-out-path.ts). Strip the actual mangled HOME
+  // prefix rather than guessing at "Users-<username>-", so hyphenated usernames work.
+  const homePrefix = HOME.replace(/\//g, "-").replace(/^-/, "") + "-";
+  const stripped = project.startsWith(homePrefix) ? project.slice(homePrefix.length) : project;
   if (stripped !== project) {
     const tokens = stripped.split("-");
     const primary = tokens.length > 1 ? tokens.slice(-2).join("-") : tokens[0];

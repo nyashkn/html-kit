@@ -172,7 +172,7 @@ function scheduleRebuild(triggerPath?: string) {
 }
 
 // Slug dirs to skip inside KIT_HOME when enumerating per-slug watchers.
-const KIT_HOME_SKIP = new Set(["_daemon", "_index", "_old_tmp", "_archive"]);
+const KIT_HOME_SKIP = new Set(["_daemon", "_index", "_old_tmp", "_archive", "_gotchas", "_patterns"]);
 
 function setupWatchers(repos: ReposMap) {
   const dirs = new Set<string>();
