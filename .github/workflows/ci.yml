@@ -94,7 +94,7 @@ jobs:
             --scaffold \
             --allow-tools Bash Write Edit \
             --ablation none \
-            --model claude-sonnet-5 \
+            --model claude-haiku-4-5 \
             --threshold 0.8 \
             --max-cost-usd 5 \
             --no-publish \
@@ -149,7 +149,7 @@ jobs:
             --tag paid \
             --trust-plugin \
             --allow-tools Bash Write Edit \
-            --model claude-sonnet-5 \
+            --model claude-haiku-4-5 \
             --judge-model claude-haiku-4-5 \
             --threshold 0.8 \
             --max-cost-usd 15 \
