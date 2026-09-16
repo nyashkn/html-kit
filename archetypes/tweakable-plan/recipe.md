@@ -1,3 +1,8 @@
+---
+name: tweakable-plan
+when: use when a plan's real risk is which decisions get revisited, not execution order: sort by likelihood-of-tweaking
+---
+
 # tweakable-plan
 
 **Use when:** an implementation plan's real risk isn't execution order, it's WHICH DECISIONS get revisited — sort sections by likelihood-of-tweaking (highest first) instead of build order, flag schema/type choices with toggleable alternatives inline, and collapse the mechanical work to the bottom. Prefer plain `implementation-plan` when the plan is mostly sequencing, not decisions.

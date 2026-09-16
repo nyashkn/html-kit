@@ -1,3 +1,8 @@
+---
+name: pr-description
+when: use when writing the PR author's description for reviewers: motivation, before/after, file-by-file tour
+---
+
 # pr-writeup
 
 **Use when:** the PR author's writeup for reviewers — motivation, before/after, file-by-file tour with the *why*, where to focus the review.

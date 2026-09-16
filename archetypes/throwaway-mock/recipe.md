@@ -1,3 +1,8 @@
+---
+name: throwaway-mock
+when: use when mocking one interactive UI control before any real code is touched, narrower than clickable-flow
+---
+
 # throwaway-mock
 
 **Use when:** mocking an interactive UI element (a toolbar, control surface, widget) before any real code is touched — clickable, toggleable variant placements, inline A/B questions, and a self-filling reply template. Narrower than `clickable-flow` (one control surface, not a multi-screen journey).

@@ -1,3 +1,8 @@
+---
+name: module-map
+when: use when explaining an unfamiliar package/module: boxes-and-arrows of internal structure, hot path highlighted
+---
+
 # module-map
 
 **Use when:** explaining an unfamiliar package/module — boxes-and-arrows of internal structure, hot path highlighted, entry points listed.

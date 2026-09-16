@@ -1,3 +1,8 @@
+---
+name: svg-figure-sheet
+when: use when producing a set of inline SVG figures for a blog post or doc that the user can tweak or copy out
+---
+
 # svg-figure-sheet
 
 **Use when:** producing a set of inline SVG figures for a blog post / doc — vector art the user can tweak or copy out.

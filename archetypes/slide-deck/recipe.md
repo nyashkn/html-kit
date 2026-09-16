@@ -1,3 +1,8 @@
+---
+name: slide-deck
+when: use when turning a doc/Slack thread/synth into an arrow-key navigable deck for a meeting
+---
+
 # slide-deck
 
 **Use when:** turning a doc/Slack thread/synth into an arrow-key navigable deck for a meeting. No Keynote, no export.

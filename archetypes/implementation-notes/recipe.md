@@ -1,3 +1,8 @@
+---
+name: implementation-notes
+when: use when capturing what actually happened during a build vs. the plan, as a timestamped deviation log
+---
+
 # implementation-notes
 
 **Use when:** capturing what actually happened during a build vs. what the plan said — a timestamped, filterable log of every deviation from plan, the conservative call made in the moment, and a short list of bullets to fold into the next attempt.

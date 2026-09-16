@@ -1,3 +1,8 @@
+---
+name: incident-timeline
+when: use when writing a post-mortem of an outage: minute-by-minute timeline, log excerpts, follow-up checklist
+---
+
 # incident-timeline
 
 **Use when:** post-mortem of an outage — minute-by-minute timeline, log excerpts, follow-up checklist.

@@ -1,3 +1,8 @@
+---
+name: triage-board
+when: use when ordering N tickets/items across columns (Now/Next/Later/Cut) with drag-and-drop and export
+---
+
 # triage-board
 
 **Use when:** ordering N tickets/items across columns (Now / Next / Later / Cut) with drag-and-drop, then exporting the result.

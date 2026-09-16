@@ -1,3 +1,8 @@
+---
+name: buy-in-pitch
+when: use when pitching a shipped-but-not-yet-approved feature for sign-off, pre-answering reviewer objections
+---
+
 # buy-in-pitch
 
 **Use when:** pitching a shipped-but-not-yet-approved feature for sign-off — leads with a demo of the actual flow, pre-answers every objection a reviewer was about to raise with cited evidence, and names exactly who needs to approve what.

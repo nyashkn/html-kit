@@ -1,3 +1,8 @@
+---
+name: reference-port-verify
+when: use when porting a reference implementation and you need proof the semantics were understood before any port code
+---
+
 # reference-port-verify
 
 **Use when:** porting a reference implementation from one language/system to another and you need PROOF Claude understood the semantics before any port code is written — matched excerpt pairs, margin gotcha notes, an edge-case table, and a preserved/changed/dropped breakdown.
