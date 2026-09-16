@@ -92,6 +92,19 @@ jobs:
             --no-publish \
             --json evals/results/free-result.json
 
+      - name: Summarize free eval results
+        if: always()
+        run: |
+          jq -r '.cases[] | .name as $n | .arms.with[] | "\($n): score=\(.score) error=\(.error // "none")", (.graders[]? | "   \(.name): \(.passed)")' evals/results/free-result.json || true
+
+      - name: Upload free eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-free-report
+          path: evals/results/
+          if-no-files-found: ignore
+
   plugin-eval-paid:
     name: Plugin eval (llm/baseline graders)
     runs-on: ubuntu-latest
@@ -126,3 +139,16 @@ jobs:
             --max-cost-usd 15 \
             --no-publish \
             --json evals/results/paid-result.json
+
+      - name: Summarize paid eval results
+        if: always()
+        run: |
+          jq -r '.cases[] | .name as $n | .arms.with[] | "\($n): score=\(.score) error=\(.error // "none")", (.graders[]? | "   \(.name): \(.passed)")' evals/results/paid-result.json || true
+
+      - name: Upload paid eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-paid-report
+          path: evals/results/
+          if-no-files-found: ignore
