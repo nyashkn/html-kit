@@ -46,7 +46,9 @@ test.describe.serial("html-kit dashboard", () => {
     await expect(toast).toBeVisible();
     await expect(toast.locator(".t-title")).toHaveText(/Up to date|new repo|No scan roots configured/);
     await expect(toast).toHaveClass(/show/);
-    if (body.added.length === 0) {
+    if (body.unconfigured) {
+      await expect(toast.locator(".t-title")).toHaveText("No scan roots configured");
+    } else if (body.added.length === 0) {
       await expect(toast.locator(".t-title")).toHaveText("Up to date");
       await expect(toast.locator(".t-body")).toContainText(`Scanned`);
     }
