@@ -71,6 +71,14 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install sandbox backend (bubblewrap + socat)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat
+          if [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = "1" ]; then
+            printf 'abi <abi/4.0>,\ninclude <tunables/global>\nprofile bwrap /usr/bin/bwrap flags=(unconfined) {\n  userns,\n  include if exists <local/bwrap>\n}\n' | sudo tee /etc/apparmor.d/bwrap >/dev/null
+            sudo systemctl reload apparmor
+          fi
+
       - name: Install Claude Code CLI
         run: |
           curl -fsSL https://claude.ai/install.sh | bash -s 2.1.273
@@ -119,6 +127,14 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+
+      - name: Install sandbox backend (bubblewrap + socat)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat
+          if [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = "1" ]; then
+            printf 'abi <abi/4.0>,\ninclude <tunables/global>\nprofile bwrap /usr/bin/bwrap flags=(unconfined) {\n  userns,\n  include if exists <local/bwrap>\n}\n' | sudo tee /etc/apparmor.d/bwrap >/dev/null
+            sudo systemctl reload apparmor
+          fi
 
       - name: Install Claude Code CLI
         run: |
