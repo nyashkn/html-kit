@@ -118,6 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Post-merge quality signal only: it can't block a merge that already happened.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -166,5 +168,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: eval-paid-report
-          path: evals/results/
+          path: |
+            evals/results/
+            /tmp/claude-eval-*/out/trace.jsonl
           if-no-files-found: ignore
