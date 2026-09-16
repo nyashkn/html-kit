@@ -16,10 +16,11 @@ with one `/html-kit` command inside Claude Code.
   picks the right template, renders a single `.html` file with inline CSS / SVG
   / JS, and opens it. No external assets — paste it into Notion, email, a PR, or
   serve it as a link.
-- **19 battle-tested archetypes.** Implementation plans, incident timelines,
+- **30 battle-tested archetypes.** Implementation plans, incident timelines,
   PR reviews, explainers, dashboards, slide decks, triage boards, and more —
-  each one a vendored, MIT-licensed exemplar plus a `recipe.md` that tells the
-  agent when to use it and how to adapt it.
+  each one a vendored exemplar (MIT or Apache-2.0 per file — see
+  [`ATTRIBUTION.md`](ATTRIBUTION.md)) plus a `recipe.md` that tells the agent
+  when to use it and how to adapt it.
 - **Consistent house style.** Every artifact uses the same Anthropic palette
   tokens and component vocabulary, so a folder of renders looks like one
   product, not fifteen ad-hoc pages.
@@ -30,19 +31,20 @@ with one `/html-kit` command inside Claude Code.
 
 ## Quick start
 
-Prerequisites: [Bun](https://bun.sh) and Claude Code.
+Prerequisites: [Bun](https://bun.sh) >= 1.1 and Claude Code.
 
-```bash
-git clone git@github.com:nyashkn/html-kit.git
-cd html-kit
-bun install
-./install.sh          # symlinks the skills into ~/.agents/skills + ~/.claude/skills
-```
+| Install as… | Steps |
+|---|---|
+| Claude Code plugin (recommended) | `/plugin marketplace add nyashkn/html-kit` then `/plugin install html-kit@html-kit`. If you previously ran `./install.sh`, run `./install.sh --uninstall` first — otherwise each skill loads twice (once from the symlinks, once from the plugin). |
+| Manual (dev / non-plugin) | `git clone git@github.com:nyashkn/html-kit.git && cd html-kit && bun install && ./install.sh` |
+
+`./install.sh` symlinks the skills into `~/.agents/skills` + `~/.claude/skills`.
 
 Restart Claude Code, then in any session:
 
 ```
-/html-kit  <paste or point at your source content>
+/html-kit  <paste or point at your source content>          # manual install
+/html-kit:html-kit  <paste or point at your source content>  # plugin install (namespaced)
 ```
 
 The skill browses `archetypes/`, reads a few `recipe.md` files to choose the
@@ -56,30 +58,36 @@ To uninstall: `./install.sh --uninstall`.
 
 ```
 html-kit/
-├── archetypes/<slug>/          # 19 archetypes, one dir each
-│   ├── exemplar.html           # vendored MIT exemplar (some have flavour variants)
+├── .claude-plugin/
+│   ├── plugin.json              # plugin manifest
+│   └── marketplace.json         # self-hosted marketplace (single plugin, source "./")
+├── archetypes/<slug>/          # 30 battle-tested archetypes, one dir each
+│   ├── exemplar.html           # vendored exemplar, MIT or Apache-2.0 per file — see ATTRIBUTION.md
 │   └── recipe.md               # when to use, expected data shape, gotchas
 ├── patterns/<slug>.md          # cross-archetype reusable fragments
 │   ├── decision-box.md  option-card.md  swimlane-flow.md  annotation-strip.md
 ├── tokens/anthropic-palette.css  # shared CSS custom properties (palette + type)
 ├── assets/pagefind-overrides.css # Anthropic skin for the search modal
 ├── scripts/                    # Bun helper scripts (see below)
-├── skill/<name>/SKILL.md       # the three Claude Code skills (see below)
+├── skills/<name>/SKILL.md      # the three Claude Code skills (see below)
 ├── tests/                      # Playwright suite
-├── install.sh                  # idempotent symlink installer
+├── install.sh                  # idempotent symlink installer (manual/dev install)
 ├── LICENSE  ATTRIBUTION.md  CHANGELOG.md
 ```
 
 ### Skills
 
-| Skill | Invoke | What it does |
-|---|---|---|
-| `html-kit` | `/html-kit` | Router. Picks an archetype, learns its pattern, renders a new self-contained artifact, audits it, opens it. |
-| `html-kit-add-to-patterns` | `/html-kit:add-to-patterns` | Extracts a reusable cross-archetype pattern (CSS + HTML fragment + when-to-use) from a finished artifact and promotes it into `patterns/`. |
-| `html-kit-drain` | `/html-kit-drain` | Reads pending browser annotations for the artifact in focus and acts on them inline (accept / reject / comment / tag). |
+| Skill | Manual install | Plugin install (namespaced) | What it does |
+|---|---|---|---|
+| `html-kit` | `/html-kit` | `/html-kit:html-kit` | Router. Picks an archetype, learns its pattern, renders a new self-contained artifact, audits it, opens it. |
+| `html-kit-add-to-patterns` | `/html-kit-add-to-patterns` | `/html-kit:html-kit-add-to-patterns` | Extracts a reusable cross-archetype pattern (CSS + HTML fragment + when-to-use) from a finished artifact and promotes it into `patterns/`. |
+| `html-kit-drain` | `/html-kit-drain` | `/html-kit:html-kit-drain` | Reads pending browser annotations for the artifact in focus and acts on them inline (accept / reject / comment / tag). |
 
-All three are auto-discovered and symlinked by `install.sh` — drop a new
-directory under `skill/` with a `SKILL.md` and re-run the installer.
+All three are auto-discovered. As a plugin, they're bundled from `skills/`.
+For a manual install, `install.sh` symlinks them — drop a new directory
+under `skills/` with a `SKILL.md` and re-run the installer.
+
+Requirements: Bun >= 1.1.
 
 ### Scripts (Bun)
 
@@ -88,7 +96,10 @@ There *is* a small toolchain behind the skill — it's not pure-prompt:
 - `resolve-out-path.ts` — decides where an artifact is written (in-repo
   `.html-kit/` vs `~/.html-kit/<project>/`), with a first-use gitignore prompt.
 - `inject-palette.ts` — emits the `:root { … }` token block to inline.
-- `render-audit.ts` — fails a render that's missing palette tokens.
+- `render-audit.ts` — fails a render that's missing palette tokens (unless it
+  opts out with `<meta name="html-kit:palette" content="custom">`) or that
+  references an external asset (CDN script/style/font/image) — artifacts must
+  be self-contained.
 - `next-number.ts` — assigns the next `NN_` prefix.
 - `build-index.ts` (`bun run html-kit:index`) — scans every registered repo's
   `.html-kit/` plus `~/.html-kit/`, runs [Pagefind](https://pagefind.app) for
@@ -113,9 +124,9 @@ There *is* a small toolchain behind the skill — it's not pure-prompt:
 ## Tests
 
 ```bash
-bun test            # Playwright suite (tests/)
-bun test:headed     # with a visible browser
-bun test:ui         # Playwright UI mode
+bun run test            # Playwright suite (tests/)
+bun run test:headed     # with a visible browser
+bun run test:ui         # Playwright UI mode
 ```
 
 See [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) for the dev loop and how to add
@@ -131,7 +142,6 @@ an archetype.
 
 MIT — see [`LICENSE`](LICENSE).
 
-The HTML exemplars are vendored from
-[ThariqS/html-effectiveness](https://github.com/ThariqS/html-effectiveness)
-under MIT; each `exemplar.html` carries an inline `<!-- source: … | MIT license -->`
-comment, and [`ATTRIBUTION.md`](ATTRIBUTION.md) rolls up the provenance.
+The HTML exemplars are vendored, MIT or Apache-2.0 per file — see
+[`ATTRIBUTION.md`](ATTRIBUTION.md) for the source repo, per-file license, and
+provenance mapping.

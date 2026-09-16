@@ -6,7 +6,7 @@ adding a new archetype.
 
 ## Dev setup
 
-Prerequisites: [Bun](https://bun.sh) and Claude Code.
+Prerequisites: [Bun](https://bun.sh) >= 1.1 and Claude Code.
 
 ```bash
 bun install           # dev deps: Playwright, Pagefind, @types/bun
@@ -21,9 +21,9 @@ re-run after pulling updates or adding a skill.
 The suite is [Playwright](https://playwright.dev):
 
 ```bash
-bun test            # headless run
-bun test:headed     # visible browser
-bun test:ui         # Playwright UI mode
+bun run test            # headless run
+bun run test:headed     # visible browser
+bun run test:ui         # Playwright UI mode
 ```
 
 If this is your first run, install the browser binaries once:
@@ -39,20 +39,28 @@ An archetype is just a directory under `archetypes/`. To add one:
 1. Create `archetypes/<slug>/exemplar.html` — a complete, self-contained page
    (inline CSS / SVG / JS, no external assets) using the Anthropic palette
    tokens from `tokens/anthropic-palette.css`. If it's vendored from a
-   third-party source, keep the inline `<!-- source: … | MIT license -->`
-   comment at the top and add it to `ATTRIBUTION.md`.
-2. Create `archetypes/<slug>/recipe.md` — *when to use* this archetype, the
-   *expected data shape*, and a `## Gotchas` section. The router skill reads
-   these to choose between archetypes, so be specific.
-3. Add a row to the "Archetype selection cheatsheet" in
-   `skill/html-kit/SKILL.md`.
-4. If the README's archetype count changes, update it.
+   third-party source, keep its license header/provenance comment at the top
+   and add it to `ATTRIBUTION.md` (note the exact license — upstream sources
+   can change license over time, don't assume MIT).
+2. Create `archetypes/<slug>/recipe.md` starting with frontmatter:
+   ```yaml
+   ---
+   name: <slug>
+   when: <one-line routing phrase the router skill matches on>
+   ---
+   ```
+   followed by *when to use* this archetype, the *expected data shape*, and a
+   `## Gotchas` section.
+3. Run `bun run cheatsheet` — it regenerates the "Archetype selection
+   cheatsheet" in `skills/html-kit/SKILL.md` and the archetype count in
+   `README.md` from every `recipe.md`'s frontmatter. Don't hand-edit either
+   table. CI runs `bun run cheatsheet --check` and fails if you forgot.
 
 No installer edit is needed — archetypes are discovered at render time.
 
 ## Adding a skill
 
-Drop a directory under `skill/<name>/` with a `SKILL.md` (YAML frontmatter +
+Drop a directory under `skills/<name>/` with a `SKILL.md` (YAML frontmatter +
 body) and re-run `./install.sh`. Skills are auto-discovered; no edits to the
 installer are required.
 

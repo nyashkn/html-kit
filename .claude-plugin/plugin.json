@@ -1,0 +1,19 @@
+{
+  "name": "html-kit",
+  "version": "0.5.0",
+  "description": "Turn any plan, spec, decision doc, synth, or dataset into a polished, self-contained single-page HTML artifact in the Anthropic palette. Skills: html-kit, html-kit-drain, html-kit-add-to-patterns.",
+  "author": {
+    "name": "KN",
+    "url": "https://github.com/nyashkn"
+  },
+  "homepage": "https://github.com/nyashkn/html-kit",
+  "repository": "https://github.com/nyashkn/html-kit",
+  "license": "MIT",
+  "keywords": [
+    "html",
+    "artifacts",
+    "skills",
+    "visualization",
+    "claude-code"
+  ]
+}

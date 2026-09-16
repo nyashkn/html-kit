@@ -7,6 +7,52 @@ are pinned in `package.json` / skill manifests; the heading dates use ISO-8601.
 
 ## [Unreleased]
 
+## [0.5.0] - Unreleased
+
+Plugin packaging: html-kit installs via `/plugin` alongside the existing
+`install.sh` path.
+
+### Added
+
+- `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` — plugin
+  manifest and self-hosted single-plugin marketplace (`source: "./"`).
+- `hooks/hooks.json` — `PostToolUse` hook runs render-audit on every Write/Edit
+  and feeds audit failures back to Claude after each write (the write itself
+  already happened — `PostToolUse` doesn't block it). `render-audit.ts` also
+  gained external-asset checks (fails a render that references a CDN
+  script/style/font/image — artifacts must be self-contained) and an opt-out
+  for the palette-token check via
+  `<meta name="html-kit:palette" content="custom">`.
+- `scripts/build-cheatsheet.ts` (`bun run cheatsheet`, `--check` for CI) —
+  regenerates the archetype cheatsheet in `skills/html-kit/SKILL.md` and the
+  archetype count in `README.md` from each `archetypes/<slug>/recipe.md`
+  frontmatter (`name` + `when`), replacing hand-edited rows.
+- `recipe.md` frontmatter — `name:` and `when:` (a one-line routing phrase)
+  are now required at the top of every archetype's `recipe.md`, consumed by
+  `build-cheatsheet.ts`.
+- `evals/` — plugin eval cases (`claude plugin eval`).
+- `.github/workflows/ci.yml` — CI: Playwright suite + plugin evals.
+- Licence attribution fix — upstream `ThariqS/html-effectiveness` relicensed
+  MIT → Apache-2.0 on 2026-05-18; the 11 exemplars vendored after that date
+  (commit `82fa96f`) are Apache-2.0, not MIT. `ATTRIBUTION.md` now splits
+  vendored exemplars by license and per-file source mapping, and
+  `LICENSES/Apache-2.0.txt` carries the full license text.
+
+### Changed
+
+- `skill/` renamed to `skills/` for plugin auto-discovery.
+- All 3 `SKILL.md` files call bundled scripts via
+  `bun ${CLAUDE_SKILL_DIR}/scripts/<script>.ts`, with a matching
+  `allowed-tools: Bash(bun ${CLAUDE_SKILL_DIR}/scripts/*)` frontmatter rule,
+  so scripts run without a permission prompt regardless of cwd.
+- `build-index.ts` / `discover-roots.ts` no longer default to a hardcoded
+  scan root — an empty `scanRoots` means no scan until configured.
+
+### Fixed
+
+- Daemon rebuild loop stopped; orphaned staging directories cleaned up; logs
+  now rotate instead of growing unbounded.
+
 ## [0.4.1] - 2026-05-19
 
 Polish on top of v0.4.0 — modal skin matches the rest of html-kit, and a

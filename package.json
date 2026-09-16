@@ -1,5 +1,7 @@
 {
+  "version": "0.5.0",
   "scripts": {
+    "cheatsheet": "bun scripts/build-cheatsheet.ts",
     "html-kit:index": "bun scripts/build-index.ts",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
